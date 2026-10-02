@@ -13,6 +13,10 @@ Finance Twin builds a financial twin of a company so managers can simulate major
 - **Twin Loop**: forecast → decision → reality → deviation → calibration
 - **AI interprets. The financial engine calculates.**
 
+## Documentación
+
+- [`docs/PRODUCTO.md`](docs/PRODUCTO.md) — **documento maestro de producto** (fuente de verdad conceptual)
+
 ## Status
 
 Early project setup. Architecture and MVP scope are being defined (TFG + real B2B product track).
