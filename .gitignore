@@ -6,6 +6,10 @@ __pycache__/
 *.pyc
 .Python
 vendor/
+.pytest_cache/
+*.egg-info/
+.eggs/
+*.sqlite
 
 # Env / secrets
 .env
@@ -44,3 +48,7 @@ yarn-error.log*
 tmp/
 temp/
 *.local
+api/data/
+
+# Local / private (not for the repo)
+docs/madagascar/

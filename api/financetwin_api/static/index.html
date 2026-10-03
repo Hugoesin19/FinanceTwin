@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finance Twin — Decision Studio</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Finance Twin</h1>
+    <p class="sub">Decision Studio (mínimo) — los números vienen solo del motor</p>
+  </header>
+
+  <main>
+    <section id="sec-company">
+      <h2>1. Empresa y twin</h2>
+      <div class="row">
+        <label>Nombre <input id="company_name" value="Demo SL" /></label>
+        <label>País <input id="company_country" value="ES" /></label>
+        <label>Moneda <input id="company_currency" value="EUR" readonly /></label>
+      </div>
+      <div class="row">
+        <label>Caja inicial <input id="opening_cash" value="80000" /></label>
+        <label>Caja mínima (política) <input id="min_cash" value="0" /></label>
+        <label>IVA <input id="vat_rate" value="0" /></label>
+        <label>IS <input id="corp_tax_rate" value="0" /></label>
+      </div>
+      <div class="actions">
+        <button type="button" id="btn-create">Crear empresa + guardar twin</button>
+        <button type="button" id="btn-save-twin" disabled>Actualizar twin</button>
+      </div>
+      <p id="company_meta" class="meta"></p>
+    </section>
+
+    <section id="sec-pack">
+      <h2>2. Pack: abrir establecimiento (new_site)</h2>
+      <fieldset>
+        <legend>Inputs</legend>
+        <div class="grid">
+          <label>Nombre sitio <input id="site_name" value="Tienda Alicante" /></label>
+          <label>Apertura (YYYY-MM) <input id="open_year_month" value="2027-01" /></label>
+          <label>CAPEX total <input id="capex_total" value="350000" /></label>
+          <label>Ventas régimen €/mes <input id="sales_run_rate" value="40000" /></label>
+          <label>Margen bruto <input id="gross_margin_pct" value="0.40" /></label>
+          <label>Alquiler mensual <input id="rent_monthly" value="4500" /></label>
+          <label>Otros opex fijos <input id="other_opex_monthly" value="1500" /></label>
+          <label>Plantilla <input id="headcount" type="number" value="2" /></label>
+          <label>Coste / persona <input id="employer_cost_per_person" value="2800" /></label>
+          <label>Deuda <input id="debt_amount" value="200000" /></label>
+          <label>Equity <input id="equity_amount" value="150000" /></label>
+          <label>Plazo préstamo (meses) <input id="loan_term_months" type="number" value="60" /></label>
+          <label>TIN préstamo <input id="loan_annual_rate" value="0.055" /></label>
+          <label>Horizonte (meses) <input id="horizon_months" type="number" value="24" /></label>
+          <label>Tasa descuento <input id="discount_rate_annual" value="0.08" /></label>
+          <label>Variante
+            <select id="variant">
+              <option value="base">base</option>
+              <option value="conservative">conservative</option>
+              <option value="adverse">adverse</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+      <div class="actions">
+        <button type="button" id="btn-run" disabled>Calcular escenario</button>
+      </div>
+      <p id="run_meta" class="meta"></p>
+      <p id="error" class="error" hidden></p>
+    </section>
+
+    <section id="sec-report" hidden>
+      <h2>3. Informe (CalculationRun)</h2>
+      <div id="metrics" class="metrics"></div>
+      <h3>Políticas</h3>
+      <table id="policies">
+        <thead><tr><th>Política</th><th>Estado</th><th>Valor</th><th>Umbral</th><th>Mensaje</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h3>Caja (meses)</h3>
+      <div class="table-wrap">
+        <table id="cash">
+          <thead>
+            <tr>
+              <th>t</th><th>opening_cash</th><th>closing_cash</th>
+              <th>capex_paid</th><th>loan_drawdowns</th>
+              <th>net_cash_flow</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <h3>Trazabilidad</h3>
+      <pre id="trace"></pre>
+      <p id="warnings" class="warn"></p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

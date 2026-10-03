@@ -1,0 +1,144 @@
+/* F6 — UI mínima, sin ornamento. */
+:root {
+  --bg: #f7f7f5;
+  --fg: #1a1a1a;
+  --muted: #5c5c5c;
+  --line: #d4d4d0;
+  --err: #8b1a1a;
+  --ok: #1a5c2e;
+  --warn: #6b5200;
+  --card: #fff;
+  --accent: #1f4b7a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.4;
+}
+
+header, main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem;
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.sub { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+section {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 1rem 1.1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+h2 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+h3 { margin: 1rem 0 0.5rem; font-size: 1rem; }
+
+.row, .grid {
+  display: grid;
+  gap: 0.65rem 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  margin-bottom: 0.75rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+input, select {
+  font: inherit;
+  color: var(--fg);
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+button {
+  font: inherit;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button#btn-save-twin {
+  background: #fff;
+  color: var(--accent);
+}
+
+.meta { color: var(--muted); font-size: 0.85rem; margin: 0.6rem 0 0; }
+.error { color: var(--err); white-space: pre-wrap; }
+.warn { color: var(--warn); white-space: pre-wrap; }
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.metric {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.65rem;
+}
+
+.metric .k { font-size: 0.75rem; color: var(--muted); }
+.metric .v { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.45rem;
+  text-align: left;
+}
+
+th { background: #f0f0ec; }
+
+.status-pass { color: var(--ok); }
+.status-fail { color: var(--err); }
+.status-skip { color: var(--muted); }
+
+pre#trace {
+  background: #f0f0ec;
+  border: 1px solid var(--line);
+  padding: 0.6rem;
+  overflow-x: auto;
+  font-size: 0.8rem;
+}
+
+fieldset {
+  border: 1px solid var(--line);
+  margin: 0 0 0.75rem;
+  padding: 0.75rem;
+}
+
+legend { padding: 0 0.3rem; }

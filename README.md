@@ -15,11 +15,19 @@ Finance Twin builds a financial twin of a company so managers can simulate major
 
 ## Documentación
 
-- [`docs/PRODUCTO.md`](docs/PRODUCTO.md) — **documento maestro de producto** (fuente de verdad conceptual)
+**Al programar:** seguir [`docs/PLAN_IMPLEMENTACION.md`](docs/PLAN_IMPLEMENTACION.md) (fase activa + reglas anti-alucinación).
+
+- [`docs/DOCUMENTACION.md`](docs/DOCUMENTACION.md) — inventario
+- [`docs/PLAN_IMPLEMENTACION.md`](docs/PLAN_IMPLEMENTACION.md) — **plan de implementación**
+- [`docs/PRODUCTO.md`](docs/PRODUCTO.md) — producto
+- [`docs/MOTOR_FINANCIERO.md`](docs/MOTOR_FINANCIERO.md) — motor
+- [`docs/MODELO_DATOS.md`](docs/MODELO_DATOS.md) — datos
+- [`docs/DECISION_PACKS.md`](docs/DECISION_PACKS.md) — packs
+- [`docs/VALIDACION.md`](docs/VALIDACION.md) — validación
 
 ## Status
 
-Early project setup. Architecture and MVP scope are being defined (TFG + real B2B product track).
+Fase activa: **F8** (validación TFG). F0–F7 cerradas (motor → Twin Loop).
 
 ## Repository
 
