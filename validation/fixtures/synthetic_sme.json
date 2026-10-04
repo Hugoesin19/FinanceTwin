@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "label": "plan_b_synthetic_sme",
+  "notes": "Empresa sintética para F8 Plan B. No es Madagascar ni datos reales.",
+  "opening_cash": "50000",
+  "horizon_hist_months": 24,
+  "discount_rate_annual": "0.08",
+  "revenue_base": "20000",
+  "gross_margin_pct": "0.40",
+  "collection_days": 0,
+  "rent_monthly": "3000",
+  "payroll_headcount": 2,
+  "payroll_cost": "2500",
+  "loan_principal": "60000",
+  "loan_rate": "0.06",
+  "loan_term_months": 24,
+  "capex": "60000",
+  "noise_revenue_pct": "0.02"
+}

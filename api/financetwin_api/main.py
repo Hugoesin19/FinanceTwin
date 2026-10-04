@@ -1,30 +1,36 @@
-"""Finance Twin minimal API — F5/F6."""
+"""Finance Twin API — F5–F7 + P1 packs + P5 CSV import."""
 
 from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from financetwin_api.csv_import import (
+    TwinCsvError,
+    format_import_error,
+    parse_and_validate_twin_csv,
+)
 from financetwin_api.db import Store
-from financetwin_api.ops import variant_overrides
+from financetwin_api.packs_run import PACK_IDS, run_pack_for_company
+from financetwin_api.report_html import render_executive_html
 from financetwin_api.serialize import to_jsonable
+from financetwin_api.sensitivity_run import run_sensitivity_for_company
 from financetwin_api.twin_loop import (
     preview_calibration,
     record_actuals,
     register_decision,
     transition_decision,
 )
-from financetwin_engine import NewSitePack, calculate, snapshot_from_dict
-from financetwin_engine.mapper import ScenarioSpec, to_calculation_input
-from financetwin_engine.packs.base import has_errors
+from financetwin_api.twin_quality import assess_twin_quality
+from financetwin_engine import snapshot_from_dict
+from financetwin_engine.mapper.snapshot import SnapshotValidationError
 from financetwin_engine.version import ENGINE_VERSION
 
 DEFAULT_DB = os.environ.get(
@@ -33,6 +39,7 @@ DEFAULT_DB = os.environ.get(
 )
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 
 
 def get_store(request: Request) -> Store:
@@ -50,7 +57,7 @@ class PutSnapshotBody(BaseModel):
     label: str | None = None
 
 
-class RunNewSiteBody(BaseModel):
+class RunPackBody(BaseModel):
     inputs: dict[str, Any]
     variant: str = Field(default="base", description="base | conservative | adverse")
 
@@ -94,6 +101,21 @@ class CalibrationPreviewBody(BaseModel):
     inputs: dict[str, Any]
 
 
+class SensitivityBody(BaseModel):
+    inputs: dict[str, Any]
+    variant: str = Field(default="base")
+    include: list[str] = Field(
+        default_factory=lambda: ["direct", "inverse", "stress"],
+        description="direct | inverse | stress",
+    )
+
+
+class ExecutiveReportBody(BaseModel):
+    run: dict[str, Any]
+    compare: dict[str, Any] | None = None
+    company_name: str = "Empresa"
+
+
 def create_app(db_path: str | None = None) -> FastAPI:
     path = db_path or DEFAULT_DB
 
@@ -105,13 +127,30 @@ def create_app(db_path: str | None = None) -> FastAPI:
     application = FastAPI(
         title="Finance Twin API",
         version="0.1.0",
-        description="Minimal local API (F5). No auth.",
+        description="Finance Twin API (F5–F7 + P1–P13 uso C). No auth.",
         lifespan=lifespan,
     )
 
     @application.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok", "engine_version": ENGINE_VERSION}
+
+    @application.get("/companies")
+    def list_companies(request: Request) -> dict[str, Any]:
+        store = get_store(request)
+        rows = store.list_companies()
+        return {
+            "companies": [
+                {
+                    "id": r.id,
+                    "name": r.name,
+                    "country": r.country,
+                    "currency": r.currency,
+                    "created_at": r.created_at,
+                }
+                for r in rows
+            ]
+        }
 
     @application.post("/companies")
     def create_company(body: CreateCompanyBody, request: Request) -> dict[str, Any]:
@@ -156,129 +195,136 @@ def create_app(db_path: str | None = None) -> FastAPI:
         if cur is None:
             raise HTTPException(status_code=404, detail="no current snapshot")
         mv_id, snap = cur
-        return {"model_version_id": mv_id, "snapshot": snap}
+        return {
+            "model_version_id": mv_id,
+            "snapshot": snap,
+            "quality": assess_twin_quality(snap),
+        }
 
-    @application.post("/companies/{company_id}/packs/new_site/run")
-    def run_new_site(
-        company_id: str,
-        body: RunNewSiteBody,
-        request: Request,
-    ) -> dict[str, Any]:
+    @application.get("/companies/{company_id}/twin-quality")
+    def twin_quality(company_id: str, request: Request) -> dict[str, Any]:
         store = get_store(request)
         if store.get_company(company_id) is None:
             raise HTTPException(status_code=404, detail="company not found")
         cur = store.get_current_snapshot(company_id)
         if cur is None:
-            raise HTTPException(status_code=400, detail="company has no current snapshot")
-        model_version_id, snap_dict = cur
-
-        try:
-            snapshot = snapshot_from_dict(snap_dict)
-        except Exception as e:
-            raise HTTPException(
-                status_code=400, detail=f"stored snapshot invalid: {e}"
-            ) from e
-
-        pack = NewSitePack()
-        resolved = pack.resolve_defaults(snapshot, body.inputs)
-        issues = pack.validate_inputs(resolved)
-        if has_errors(issues):
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "errors": [
-                        {"code": i.code, "message": i.message}
-                        for i in issues
-                        if i.severity == "error"
-                    ]
-                },
-            )
-
-        try:
-            bundle = pack.build(snapshot, resolved)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
-
-        if body.variant not in bundle.variants:
-            raise HTTPException(
-                status_code=400,
-                detail=f"unknown variant {body.variant!r}; have {list(bundle.variants)}",
-            )
-        plan = bundle.variants[body.variant]
-        # Persist JSON-safe overrides; calculate with live BuildOps (no round-trip).
-        overrides_json = variant_overrides(plan)
-
-        scenario_id = store.create_scenario(
-            company_id=company_id,
-            name=f"new_site:{resolved.get('site_name', 'site')}:{body.variant}",
-            scenario_type=body.variant
-            if body.variant in ("base", "conservative", "adverse")
-            else "custom",
-            base_model_version_id=model_version_id,
-            anchor_year_month=plan.anchor_year_month,
-            horizon_months=plan.horizon_months,
-            discount_rate_annual=str(plan.discount_rate_annual),
-            overrides=overrides_json,
-            auto_finance_deficits=False,
-        )
-
-        rate = plan.discount_rate_annual
-        if not isinstance(rate, Decimal):
-            rate = Decimal(str(rate))
-
-        mapped = to_calculation_input(
-            snapshot,
-            ScenarioSpec(
-                anchor_year_month=plan.anchor_year_month,
-                horizon_months=plan.horizon_months,
-                discount_rate_annual=rate,
-                auto_finance_deficits=False,
-                overrides=plan.build_ops,
-            ),
-        )
-        result = calculate(mapped.calculation_input)
-
-        calc_in = to_jsonable(mapped.calculation_input)
-        results = to_jsonable(result)
-        run_id = store.create_calculation_run(
-            scenario_id=scenario_id,
-            company_id=company_id,
-            engine_version=ENGINE_VERSION,
-            model_version_id=model_version_id,
-            inputs_hash=mapped.inputs_hash,
-            calculation_input=calc_in,
-            results=results,
-            status="completed",
-        )
-
-        cur_after = store.get_current_snapshot(company_id)
-        if cur_after is None or cur_after[0] != model_version_id:
-            raise HTTPException(
-                status_code=500,
-                detail="model version current was mutated unexpectedly",
-            )
-
-        metrics = (
-            to_jsonable(result.investment_metrics)
-            if result.investment_metrics is not None
-            else None
-        )
-
+            raise HTTPException(status_code=404, detail="no current snapshot")
+        mv_id, snap = cur
         return {
             "company_id": company_id,
-            "model_version_id": model_version_id,
-            "scenario_id": scenario_id,
-            "calculation_run_id": run_id,
-            "variant": body.variant,
-            "engine_version": ENGINE_VERSION,
-            "inputs_hash": mapped.inputs_hash,
-            "result_hash": result.result_hash,
-            "investment_metrics": metrics,
-            "financing_need": to_jsonable(result.financing_need),
-            "policy_checks": to_jsonable(result.policy_checks),
-            "warnings": list(result.warnings),
-            "results": results,
+            "model_version_id": mv_id,
+            "quality": assess_twin_quality(snap),
         }
+
+    @application.get("/templates/twin_snapshot_template.csv")
+    def download_twin_template() -> FileResponse:
+        path = TEMPLATES_DIR / "twin_snapshot_template.csv"
+        if not path.is_file():
+            raise HTTPException(status_code=404, detail="template not found")
+        return FileResponse(
+            path,
+            media_type="text/csv",
+            filename="twin_snapshot_template.csv",
+        )
+
+    @application.post("/companies/{company_id}/imports/twin-csv")
+    async def import_twin_csv(
+        company_id: str,
+        request: Request,
+        file: UploadFile = File(...),
+        label: str | None = Form(default=None),
+    ) -> dict[str, Any]:
+        """P5 — CSV plantilla → validate → nueva ModelVersion current."""
+        store = get_store(request)
+        if store.get_company(company_id) is None:
+            raise HTTPException(status_code=404, detail="company not found")
+        raw_bytes = await file.read()
+        try:
+            text = raw_bytes.decode("utf-8-sig")
+        except UnicodeDecodeError as e:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "csv_encoding", "message": "CSV must be UTF-8"},
+            ) from e
+        try:
+            snapshot = parse_and_validate_twin_csv(text)
+        except (TwinCsvError, SnapshotValidationError, ValueError, TypeError, KeyError) as e:
+            raise HTTPException(status_code=400, detail=format_import_error(e)) from e
+
+        mv_id = store.put_current_snapshot(
+            company_id,
+            snapshot,
+            label=label or (file.filename and f"csv:{file.filename}") or "csv-import",
+        )
+        return {
+            "company_id": company_id,
+            "model_version_id": mv_id,
+            "is_current": True,
+            "source_filename": file.filename,
+            "snapshot": snapshot,
+            "quality": assess_twin_quality(snapshot),
+        }
+
+    @application.get("/packs")
+    def list_packs() -> dict[str, Any]:
+        return {"packs": list(PACK_IDS)}
+
+    @application.post("/companies/{company_id}/reports/executive")
+    def executive_report(
+        company_id: str, body: ExecutiveReportBody, request: Request
+    ) -> HTMLResponse:
+        """P10 — HTML descargable; solo pinta el run/compare enviados (sin recalcular)."""
+        store = get_store(request)
+        company = store.get_company(company_id)
+        if company is None:
+            raise HTTPException(status_code=404, detail="company not found")
+        if not isinstance(body.run, dict) or not body.run.get("calculation_run_id"):
+            raise HTTPException(
+                status_code=400, detail="run.calculation_run_id required"
+            )
+        name = body.company_name or company.name
+        html_doc = render_executive_html(
+            company_name=name, run=body.run, compare=body.compare
+        )
+        headers = {
+            "Content-Disposition": 'attachment; filename="informe_finance_twin.html"'
+        }
+        return HTMLResponse(content=html_doc, media_type="text/html; charset=utf-8", headers=headers)
+
+    @application.post("/companies/{company_id}/packs/{pack_id}/run")
+    def run_pack(
+        company_id: str,
+        pack_id: str,
+        body: RunPackBody,
+        request: Request,
+    ) -> dict[str, Any]:
+        """Ejecuta cualquier pack MVP (incl. new_site). Persiste Scenario + CalculationRun."""
+        store = get_store(request)
+        return run_pack_for_company(
+            store,
+            company_id=company_id,
+            pack_id=pack_id,
+            inputs=body.inputs,
+            variant=body.variant,
+        )
+
+    @application.post("/companies/{company_id}/packs/{pack_id}/sensitivity")
+    def run_sensitivity(
+        company_id: str,
+        pack_id: str,
+        body: SensitivityBody,
+        request: Request,
+    ) -> dict[str, Any]:
+        """P6 — sensibilidad/inversa/stress (re-llama al motor; no muta MV)."""
+        store = get_store(request)
+        return run_sensitivity_for_company(
+            store,
+            company_id=company_id,
+            pack_id=pack_id,
+            inputs=body.inputs,
+            variant=body.variant,
+            include=body.include,
+        )
 
     @application.get("/calculation-runs/{run_id}")
     def get_run(run_id: str, request: Request) -> dict[str, Any]:
@@ -289,6 +335,13 @@ def create_app(db_path: str | None = None) -> FastAPI:
         return row
 
     # --- F7 Twin Loop ---
+
+    @application.get("/companies/{company_id}/decisions")
+    def list_company_decisions(company_id: str, request: Request) -> dict[str, Any]:
+        store = get_store(request)
+        if store.get_company(company_id) is None:
+            raise HTTPException(status_code=404, detail="company not found")
+        return {"company_id": company_id, "decisions": store.list_decisions(company_id)}
 
     @application.post("/companies/{company_id}/decisions")
     def create_decision(

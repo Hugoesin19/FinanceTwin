@@ -1,0 +1,13 @@
+{
+  "mode": "plan_b_synthetic",
+  "mape_revenue_exact": "0",
+  "mape_cash_exact": "0",
+  "mape_debt_exact": "0",
+  "mape_cash_vs_noisy_observed": "0.02000800320128051220488195276",
+  "noise_pct": "0.02",
+  "thresholds": {
+    "revenue": "0.10",
+    "closing_cash": "0.15",
+    "debt": "0.05"
+  }
+}

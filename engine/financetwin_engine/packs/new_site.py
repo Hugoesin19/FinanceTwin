@@ -84,7 +84,7 @@ class NewSitePack:
         return list(ACTUAL_KEYS)
 
     def analysis_plan(self) -> dict[str, Any]:
-        """Sensibilidad / inversa (§5.5). Ejecución completa de sweeps → F4+/analytics."""
+        """Sensibilidad / inversa (§5.5). Sweeps: `analytics.sensitivity.run_analysis`."""
         return {
             "sensitivity_vars": [
                 "sales_run_rate",
@@ -104,7 +104,7 @@ class NewSitePack:
                 "open_plus_4m",
                 "rate_plus_200bp",
             ],
-            "note": "MVP F3: metrics+policy via calculate(); sweeps not executed here",
+            "note": "Sweeps executed via financetwin_engine.analytics.sensitivity (re-calls calculate)",
         }
 
     def resolve_defaults(

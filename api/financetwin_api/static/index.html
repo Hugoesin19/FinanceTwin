@@ -7,94 +7,459 @@
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <header>
-    <h1>Finance Twin</h1>
-    <p class="sub">Decision Studio (mínimo) — los números vienen solo del motor</p>
-  </header>
+  <div class="app-shell">
+    <aside id="app-nav" class="app-sidebar no-print" aria-label="Navegación">
+      <div class="sidebar-brand">
+        <span class="brand-mark">FT</span>
+        <span class="brand-name">Finance Twin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button type="button" class="side-link active" data-goto="home" id="nav-home">Inicio</button>
+        <button type="button" class="side-link" data-goto="decision" id="nav-decision">Decidir</button>
+        <button type="button" class="side-link" data-goto="liquidity" id="nav-liquidity">Liquidez</button>
+        <button type="button" class="side-link" data-goto="report" id="nav-report" disabled>Resultado</button>
+        <button type="button" class="side-link" data-goto="followup" id="nav-followup">Seguimiento</button>
+        <button type="button" class="side-link" data-goto="twin" id="nav-twin">Datos</button>
+      </nav>
+      <p class="sidebar-foot">Los números los calcula el motor.<br />
+        <a href="/static/guia-usuario.html" class="side-doc-link" target="_blank" rel="noopener">Guía de usuario (PDF)</a>
+      </p>
+    </aside>
 
-  <main>
-    <section id="sec-company">
-      <h2>1. Empresa y twin</h2>
-      <div class="row">
-        <label>Nombre <input id="company_name" value="Demo SL" /></label>
-        <label>País <input id="company_country" value="ES" /></label>
-        <label>Moneda <input id="company_currency" value="EUR" readonly /></label>
-      </div>
-      <div class="row">
-        <label>Caja inicial <input id="opening_cash" value="80000" /></label>
-        <label>Caja mínima (política) <input id="min_cash" value="0" /></label>
-        <label>IVA <input id="vat_rate" value="0" /></label>
-        <label>IS <input id="corp_tax_rate" value="0" /></label>
-      </div>
-      <div class="actions">
-        <button type="button" id="btn-create">Crear empresa + guardar twin</button>
-        <button type="button" id="btn-save-twin" disabled>Actualizar twin</button>
-      </div>
-      <p id="company_meta" class="meta"></p>
-    </section>
-
-    <section id="sec-pack">
-      <h2>2. Pack: abrir establecimiento (new_site)</h2>
-      <fieldset>
-        <legend>Inputs</legend>
-        <div class="grid">
-          <label>Nombre sitio <input id="site_name" value="Tienda Alicante" /></label>
-          <label>Apertura (YYYY-MM) <input id="open_year_month" value="2027-01" /></label>
-          <label>CAPEX total <input id="capex_total" value="350000" /></label>
-          <label>Ventas régimen €/mes <input id="sales_run_rate" value="40000" /></label>
-          <label>Margen bruto <input id="gross_margin_pct" value="0.40" /></label>
-          <label>Alquiler mensual <input id="rent_monthly" value="4500" /></label>
-          <label>Otros opex fijos <input id="other_opex_monthly" value="1500" /></label>
-          <label>Plantilla <input id="headcount" type="number" value="2" /></label>
-          <label>Coste / persona <input id="employer_cost_per_person" value="2800" /></label>
-          <label>Deuda <input id="debt_amount" value="200000" /></label>
-          <label>Equity <input id="equity_amount" value="150000" /></label>
-          <label>Plazo préstamo (meses) <input id="loan_term_months" type="number" value="60" /></label>
-          <label>TIN préstamo <input id="loan_annual_rate" value="0.055" /></label>
-          <label>Horizonte (meses) <input id="horizon_months" type="number" value="24" /></label>
-          <label>Tasa descuento <input id="discount_rate_annual" value="0.08" /></label>
-          <label>Variante
-            <select id="variant">
-              <option value="base">base</option>
-              <option value="conservative">conservative</option>
-              <option value="adverse">adverse</option>
-            </select>
+    <div class="app-main">
+      <header id="context-bar" class="context-bar no-print">
+        <div class="context-left">
+          <label class="context-company">Empresa
+            <select id="company_select"><option value="">— Seleccionar —</option></select>
           </label>
+          <span id="context_status" class="context-status">Sin empresa</span>
         </div>
-      </fieldset>
-      <div class="actions">
-        <button type="button" id="btn-run" disabled>Calcular escenario</button>
-      </div>
-      <p id="run_meta" class="meta"></p>
-      <p id="error" class="error" hidden></p>
-    </section>
+        <div class="context-actions">
+          <button type="button" id="btn-create-top" class="secondary">+ Crear empresa</button>
+          <button type="button" id="btn-demo" class="secondary">Cargar demo</button>
+        </div>
+      </header>
 
-    <section id="sec-report" hidden>
-      <h2>3. Informe (CalculationRun)</h2>
-      <div id="metrics" class="metrics"></div>
-      <h3>Políticas</h3>
-      <table id="policies">
-        <thead><tr><th>Política</th><th>Estado</th><th>Valor</th><th>Umbral</th><th>Mensaje</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <h3>Caja (meses)</h3>
-      <div class="table-wrap">
-        <table id="cash">
-          <thead>
-            <tr>
-              <th>t</th><th>opening_cash</th><th>closing_cash</th>
-              <th>capex_paid</th><th>loan_drawdowns</th>
-              <th>net_cash_flow</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div id="status-bar" class="status-bar" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="status-text"></span>
       </div>
-      <h3>Trazabilidad</h3>
-      <pre id="trace"></pre>
-      <p id="warnings" class="warn"></p>
-    </section>
-  </main>
+      <p id="error" class="error" hidden></p>
+      <p id="demo_meta" class="meta" hidden></p>
+
+      <main class="workspace">
+        <section id="sec-home" class="panel panel-home" data-step="home" hidden>
+          <h1 class="workspace-title">¿Qué quieres hacer?</h1>
+          <p class="workspace-lead">Empieza por una empresa. Luego decide, revisa caja o sigue el plan.</p>
+
+          <div id="home-onboard" class="onboard-panel">
+            <h2 class="onboard-title">Primero, elige un camino</h2>
+            <p class="hint">Sin empresa no puedes simular. Carga la demo o crea la tuya.</p>
+            <div class="onboard-actions">
+              <button type="button" id="btn-demo-home" class="primary onboard-cta">Cargar demo (tienda)</button>
+              <button type="button" id="btn-create-home" class="secondary onboard-cta">Crear mi empresa</button>
+            </div>
+          </div>
+
+          <div id="home-company-card" class="company-card" hidden>
+            <div class="company-card-head">
+              <span class="job-kicker">Empresa activa</span>
+              <button type="button" class="linkish" data-goto="twin">Editar datos</button>
+            </div>
+            <p id="home_company_summary" class="company-card-body"></p>
+            <div id="home_quality" class="home-quality" hidden></div>
+            <p id="home_last_run" class="meta"></p>
+          </div>
+
+          <div class="job-grid">
+            <button type="button" class="job-card" data-goto="decision" id="home-btn-decide">
+              <span class="job-kicker">Decidir</span>
+              <span class="job-title">Simular una decisión</span>
+              <span class="job-desc">Inversión, contratación, financiación… y ver el impacto en caja.</span>
+              <span class="job-cta">Empezar →</span>
+            </button>
+            <button type="button" class="job-card" id="home-btn-liquidity">
+              <span class="job-kicker">Liquidez</span>
+              <span class="job-title">¿Aguanto de caja?</span>
+              <span class="job-desc">Estrés de ventas y salidas: cuánto aguantas sin romper política.</span>
+              <span class="job-cta">Empezar →</span>
+            </button>
+            <button type="button" class="job-card" data-goto="followup" id="home-btn-followup">
+              <span class="job-kicker">Seguimiento</span>
+              <span class="job-title">Plan vs realidad</span>
+              <span class="job-desc">Registra la decisión y anota lo que ocurrió de verdad.</span>
+              <span class="job-cta">Empezar →</span>
+            </button>
+          </div>
+        </section>
+
+        <section id="sec-company" class="panel" data-step="twin" hidden>
+          <h1 class="workspace-title">Datos de la empresa</h1>
+          <p class="workspace-lead">Caja, ingresos y costes con los que simulas. Sin esto, el resto miente.</p>
+
+          <details class="disclose" open>
+            <summary>Caja y políticas</summary>
+            <div class="row">
+              <label>Nombre de la empresa <input id="company_name" value="Demo SL" /></label>
+              <label>País <input id="company_country" value="ES" /></label>
+              <label>Moneda <input id="company_currency" value="EUR" readonly /></label>
+            </div>
+            <div class="row">
+              <label>Caja inicial (€) <input id="opening_cash" value="80000" /></label>
+              <label title="Mínimo de caja que no quieres romper">Caja mínima (€) <input id="min_cash" value="0" /></label>
+              <label>IVA (ej. 0.21 = 21%) <input id="vat_rate" value="0" /></label>
+              <label>Impuesto sociedades (ej. 0.25) <input id="corp_tax_rate" value="0" /></label>
+            </div>
+            <div class="actions">
+              <button type="button" id="btn-create" class="primary">Crear empresa</button>
+              <button type="button" id="btn-save-twin" class="secondary" disabled>Actualizar twin</button>
+              <button type="button" class="secondary" data-goto="decision">Ir a Decidir →</button>
+            </div>
+            <p id="company_meta" class="meta"></p>
+            <p id="twin_summary" class="twin-summary" hidden></p>
+            <p id="twin_next" class="next-hint" hidden></p>
+          </details>
+
+          <details class="disclose" open>
+            <summary>Calidad del twin</summary>
+            <div id="twin_quality_panel">
+              <div id="twin_quality_badges" class="badge-row"></div>
+              <details class="disclose nested">
+                <summary>Ver checklist</summary>
+                <ul id="twin_quality_list" class="quality-list"></ul>
+              </details>
+              <p id="twin_quality_meta" class="meta"></p>
+            </div>
+          </details>
+
+          <details class="disclose">
+            <summary>Ingresos</summary>
+            <div class="table-wrap">
+              <table id="rev-table">
+                <thead><tr><th>id</th><th>nombre</th><th>€/mes</th><th>margen</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="actions"><button type="button" id="btn-add-rev" class="secondary">Añadir ingreso</button></div>
+          </details>
+
+          <details class="disclose">
+            <summary>Costes</summary>
+            <div class="table-wrap">
+              <table id="cost-table">
+                <thead><tr><th>id</th><th>nombre</th><th>€/mes</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="actions"><button type="button" id="btn-add-cost" class="secondary">Añadir coste</button></div>
+          </details>
+
+          <details class="disclose" id="sec-import">
+            <summary>Importar CSV</summary>
+            <p class="hint">Plantilla: <a href="/templates/twin_snapshot_template.csv" download>descargar plantilla</a>.</p>
+            <div class="row">
+              <label>Archivo CSV <input id="import_file" type="file" accept=".csv,text/csv" /></label>
+              <label>Etiqueta <input id="import_label" value="csv-import" /></label>
+            </div>
+            <div class="actions">
+              <button type="button" id="btn-import-csv" class="secondary" disabled>Importar twin</button>
+            </div>
+            <p id="import_meta" class="meta"></p>
+            <details class="disclose nested">
+              <summary>Detalle técnico</summary>
+              <pre id="import_out" class="out"></pre>
+            </details>
+          </details>
+        </section>
+
+        <section id="sec-pack" class="panel" data-step="decision" hidden>
+          <h1 class="workspace-title" id="pack_workspace_title">Decidir</h1>
+          <p class="workspace-lead" id="pack_hint">Elige la decisión, revisa hipótesis y calcula.</p>
+          <p class="hint"><button type="button" class="linkish" data-goto="twin">¿Faltan datos de la empresa?</button></p>
+
+          <div class="wizard-steps no-print" id="wizard-steps" aria-label="Pasos del asistente">
+            <button type="button" class="wiz-step active" data-wiz="1" id="wiz-step-1">1 · Decisión</button>
+            <button type="button" class="wiz-step" data-wiz="2" id="wiz-step-2">2 · Hipótesis</button>
+            <button type="button" class="wiz-step" data-wiz="3" id="wiz-step-3">3 · Calcular</button>
+          </div>
+
+          <div id="wiz-pane-1" class="wiz-pane">
+            <h2 class="wiz-heading">¿Qué decisión?</h2>
+            <div id="pack_cards" class="pack-cards"></div>
+            <select id="pack_id" hidden>
+              <option value="new_site">Nuevo establecimiento</option>
+              <option value="financing">Financiación</option>
+              <option value="asset_purchase">Compra de activo</option>
+              <option value="hiring">Contratación</option>
+              <option value="generic_investment">Inversión genérica</option>
+              <option value="liquidity_plan">Plan de liquidez</option>
+            </select>
+            <div class="actions">
+              <button type="button" class="primary" id="wiz-next-1">Continuar →</button>
+            </div>
+          </div>
+
+          <div id="wiz-pane-2" class="wiz-pane" hidden>
+            <h2 class="wiz-heading" id="pack_legend">Hipótesis</h2>
+            <label class="variant-label">Escenario a detallar
+              <select id="variant">
+                <option value="base">Base</option>
+                <option value="conservative">Conservador</option>
+                <option value="adverse">Adverso</option>
+              </select>
+            </label>
+            <div class="grid" id="pack_fields"></div>
+            <details class="disclose" id="pack_advanced" hidden>
+              <summary>Campos avanzados</summary>
+              <div class="grid" id="pack_fields_advanced"></div>
+            </details>
+            <div class="actions">
+              <button type="button" class="secondary" id="wiz-back-2">← Atrás</button>
+              <button type="button" class="primary" id="wiz-next-2">Continuar →</button>
+            </div>
+          </div>
+
+          <div id="wiz-pane-3" class="wiz-pane" hidden>
+            <h2 class="wiz-heading">Calcular</h2>
+            <p class="hint" id="wiz_calc_hint">Una acción principal. El motor hace el resto.</p>
+            <div class="actions">
+              <button type="button" id="btn-run" class="primary" disabled>Calcular escenario</button>
+              <button type="button" id="btn-compare" class="secondary" disabled>Comparar 3 escenarios</button>
+              <button type="button" class="secondary" id="wiz-back-3">← Ajustar hipótesis</button>
+            </div>
+            <p id="run_meta" class="meta"></p>
+            <p id="decision_next" class="next-hint" hidden></p>
+          </div>
+        </section>
+
+        <section id="sec-report" class="panel panel-result" data-step="report" hidden>
+          <h1 class="workspace-title">Resultado</h1>
+          <p class="workspace-lead">Una respuesta. El detalle, solo si lo pides.</p>
+
+          <div id="demo_banner" class="demo-banner" hidden>
+            <strong>Demo lista.</strong>
+            <span id="demo_banner_text">Aperturaste una tienda de ejemplo. Siguiente: registrar la decisión o ajustar hipótesis.</span>
+          </div>
+
+          <div class="result-hero" id="report-header">
+            <p class="report-title" id="report_title">Informe</p>
+            <p class="meta" id="report_meta"></p>
+            <div class="hero-metric" id="hero_metric">
+              <span class="hero-label" id="hero_label">Métrica</span>
+              <span class="hero-value" id="hero_value">—</span>
+            </div>
+            <p class="report-reading" id="report_reading"></p>
+            <p id="policy-summary" class="policy-badge meta"></p>
+          </div>
+
+          <div class="actions result-actions no-print">
+            <button type="button" class="primary" data-goto="followup" id="btn-goto-register">Registrar decisión</button>
+            <button type="button" id="btn-download-report" class="secondary" disabled>Descargar informe</button>
+            <button type="button" class="secondary" data-goto="decision">Ajustar hipótesis</button>
+          </div>
+          <details class="disclose no-print" id="result-more-actions">
+            <summary>Más acciones</summary>
+            <div class="actions">
+              <button type="button" id="btn-compare-report" class="secondary" disabled>Comparar 3 escenarios</button>
+              <button type="button" id="btn-sensitivity" class="secondary" disabled>¿Qué tendría que pasar?</button>
+              <button type="button" id="btn-print" class="secondary">Imprimir</button>
+            </div>
+          </details>
+
+          <h3 class="metrics-heading">Otros indicadores</h3>
+          <div id="metrics" class="metrics"></div>
+
+          <details class="disclose" id="detail-compare">
+            <summary>Comparación de escenarios</summary>
+            <p id="compare_hint" class="hint">Pulsa «Comparar 3» para ver base, conservador y adverso juntos.</p>
+            <div class="table-wrap">
+              <table id="compare">
+                <thead>
+                  <tr>
+                    <th>Indicador</th>
+                    <th>Base</th>
+                    <th>Conservador</th>
+                    <th>Adverso</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="disclose" id="sensitivity-block">
+            <summary>Sensibilidad</summary>
+            <p id="sensitivity_hint" class="hint">Solo nuevo establecimiento. Pulsa «¿Qué tendría que pasar?».</p>
+            <div id="sensitivity_tables"></div>
+            <pre id="sensitivity_out" class="out" hidden></pre>
+            <details class="disclose nested" id="sensitivity_json_wrap" hidden>
+              <summary>Detalle técnico (JSON)</summary>
+              <pre id="sensitivity_json" class="out"></pre>
+            </details>
+          </details>
+
+          <details class="disclose" id="detail-policies">
+            <summary>Políticas (detalle)</summary>
+            <table id="policies">
+              <thead><tr><th>política</th><th>estado</th><th>valor</th><th>umbral</th><th>mensaje</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </details>
+
+          <details class="disclose" id="detail-cash">
+            <summary>Caja mes a mes</summary>
+            <div class="table-wrap">
+              <table id="cash">
+                <thead>
+                  <tr>
+                    <th>Mes</th>
+                    <th>Caja apertura</th>
+                    <th>Caja cierre</th>
+                    <th data-field="operating_cash_flow">Flujo operativo</th>
+                    <th>CAPEX</th>
+                    <th>Disposiciones</th>
+                    <th>Flujo neto</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </details>
+
+          <details class="disclose" id="detail-trace">
+            <summary>Trazabilidad (auditoría)</summary>
+            <pre id="trace"></pre>
+            <p id="warnings" class="warn"></p>
+          </details>
+        </section>
+
+        <section id="sec-twin-loop" class="panel" data-step="followup" hidden>
+          <h1 class="workspace-title">Seguimiento</h1>
+          <p class="workspace-lead">Guarda la decisión, anota lo real y aprende el sesgo.</p>
+
+          <div id="followup-empty" class="onboard-panel" hidden>
+            <h2 class="onboard-title">Todavía no hay un cálculo</h2>
+            <p class="hint">Primero simula una decisión; después podrás registrarla y anotar lo real.</p>
+            <div class="onboard-actions">
+              <button type="button" class="primary" data-goto="decision">Ir a Decidir</button>
+            </div>
+          </div>
+
+          <div id="followup-body">
+            <div class="follow-steps no-print">
+              <div class="follow-step active-follow" id="follow-step-1">
+                <strong>1 · Registrar</strong>
+                Guarda la decisión simulada
+              </div>
+              <div class="follow-step" id="follow-step-2">
+                <strong>2 · Anotar lo real</strong>
+                Previsto vs lo que pasó
+              </div>
+              <div class="follow-step" id="follow-step-3">
+                <strong>3 · Aprender</strong>
+                Patrón de desviaciones
+              </div>
+            </div>
+
+            <details class="disclose" open>
+              <summary>1. Registrar decisión</summary>
+              <div class="row">
+                <label>Título <input id="dec_title" value="Decisión UI" /></label>
+                <label>Fecha (YYYY-MM-DD) <input id="dec_date" value="2027-01-15" /></label>
+                <label>Estado
+                  <select id="dec_status">
+                    <option value="approved">Aprobada</option>
+                    <option value="executed" selected>Ejecutada</option>
+                  </select>
+                </label>
+              </div>
+              <label class="block-label">Motivo
+                <textarea id="dec_rationale" rows="2">Decisión registrada desde Decision Studio</textarea>
+              </label>
+              <div class="actions">
+                <button type="button" id="btn-register-decision" class="primary" disabled>Registrar decisión</button>
+                <button type="button" id="btn-mark-executed" class="secondary" disabled>Marcar como ejecutada</button>
+                <button type="button" class="secondary" data-goto="report">← Resultado</button>
+              </div>
+              <p id="decision_meta" class="meta"></p>
+              <p id="follow_next" class="next-hint" hidden></p>
+            </details>
+
+            <details class="disclose" open>
+              <summary>Decisiones guardadas</summary>
+              <div class="actions">
+                <button type="button" id="btn-refresh-decisions" class="secondary" disabled>Actualizar lista</button>
+              </div>
+              <div id="decisions_empty" class="empty-state">Todavía no has registrado ninguna decisión.</div>
+              <div class="table-wrap">
+                <table id="decisions-table">
+                  <thead>
+                    <tr>
+                      <th>#</th><th>título</th><th>tipo</th><th>estado</th>
+                      <th>fecha</th><th>reales</th><th>id</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </details>
+
+            <details class="disclose" id="actuals-block" open>
+              <summary>2. Anotar lo que ocurrió</summary>
+              <p id="actuals_empty" class="empty-state">Selecciona una decisión de la lista para anotar valores reales.</p>
+              <div class="row">
+                <label>Decisión
+                  <select id="actual_decision_id"></select>
+                </label>
+                <label>Periodo (YYYY-MM) <input id="actual_period" value="2027-06" /></label>
+              </div>
+              <div class="grid" id="actual_items"></div>
+              <div class="table-wrap" style="margin-top:0.75rem;">
+                <table id="forecast-actual-table">
+                  <thead><tr><th>Variable</th><th>Previsto</th><th>Real</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p id="follow_review_hint" class="next-hint">Cuando cierre el mes, vuelve y anota lo real.</p>
+              <div class="actions">
+                <button type="button" id="btn-record-actuals" class="primary" disabled>Guardar valores reales</button>
+              </div>
+              <details class="disclose nested">
+                <summary>Detalle técnico</summary>
+                <pre id="actuals_out" class="out"></pre>
+              </details>
+            </details>
+
+            <details class="disclose">
+              <summary>Ver aprendizaje (sesgos)</summary>
+              <p class="hint">Con al menos 3 meses de datos reales podemos ajustar hipótesis automáticamente. Si la API ofrece calibración (<code>offered</code>), puedes aplicarla al formulario.</p>
+              <div class="actions">
+                <button type="button" id="btn-load-bias" class="secondary" disabled>Ver sesgos</button>
+                <button type="button" id="btn-calib-preview" class="secondary" disabled>Probar calibración</button>
+                <button type="button" id="btn-apply-calib" hidden>Aplicar hipótesis calibradas</button>
+              </div>
+              <div class="table-wrap">
+                <table id="bias-table">
+                  <thead>
+                    <tr>
+                      <th>variable</th><th>n</th>
+                      <th>sesgo mediano</th><th>dirección</th><th>confianza</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p id="bias_meta" class="meta"></p>
+              <details class="disclose nested">
+                <summary>Detalle técnico</summary>
+                <pre id="calib_out" class="out"></pre>
+              </details>
+            </details>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>

@@ -1,0 +1,12 @@
+# Finance Twin — fixture inválida (currency not EUR)
+# SECTION company
+currency,opening_cash,default_purchase_payment_days
+USD,80000,0
+
+# SECTION fiscal
+vat_rate,vat_settlement,vat_payment_lag_months,corp_tax_rate,corp_tax_payment_mode
+0,monthly,0,0,none
+
+# SECTION policies
+min_cash
+0

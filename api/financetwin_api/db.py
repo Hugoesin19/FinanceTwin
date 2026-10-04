@@ -198,6 +198,13 @@ class Store:
             return None
         return CompanyRow(**dict(r))
 
+    def list_companies(self) -> list[CompanyRow]:
+        with self.connect() as conn:
+            rows = conn.execute(
+                "SELECT id, name, country, currency, created_at FROM company ORDER BY created_at DESC"
+            ).fetchall()
+        return [CompanyRow(**dict(r)) for r in rows]
+
     def put_current_snapshot(
         self,
         company_id: str,
@@ -442,6 +449,31 @@ class Store:
             for a in actuals
         ]
         return d
+
+    def list_decisions(self, company_id: str) -> list[dict[str, Any]]:
+        """Resumen de decisiones de la empresa (P4); sin frozen_projection."""
+        with self.connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT id, company_id, number, title, decision_pack_id, decision_date,
+                       status, calculation_run_id, scenario_id, model_version_id,
+                       engine_version, rationale, created_at, updated_at
+                FROM decision
+                WHERE company_id=?
+                ORDER BY number DESC
+                """,
+                (company_id,),
+            ).fetchall()
+            out: list[dict[str, Any]] = []
+            for r in rows:
+                d = dict(r)
+                n_act = conn.execute(
+                    "SELECT COUNT(*) AS n FROM actual_result WHERE decision_id=?",
+                    (d["id"],),
+                ).fetchone()["n"]
+                d["actual_results_count"] = int(n_act)
+                out.append(d)
+        return out
 
     def update_decision_status(self, decision_id: str, status: str) -> None:
         with self.connect() as conn:

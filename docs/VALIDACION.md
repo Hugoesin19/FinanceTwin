@@ -345,16 +345,16 @@ Prompts con datos faltantes → debe preguntar / marcar unknown, no estimar VAN.
 
 | ID | Evidencia a archivar | Estado inicial |
 |---|---|---|
-| L0 | Log pytest G1–G11 + invariantes | pendiente código |
-| L1 | Tests mapper | pendiente |
-| L2 | E2E new_site | pendiente |
-| V1 | Tablas MAPE histórico | pendiente datos |
-| V2 | Backtest 12m | pendiente datos |
-| V3 | Diff cuadro préstamo + VAN independiente | pendiente |
-| V4 | Scorecards 3–5 decisiones | pendiente |
-| V5 | ActualResult + BiasProfile | pendiente |
-| V6 | Acta sesión + Likert | pendiente |
-| V7 | N/A o batería IA | diferido / pendiente |
+| L0 | Log pytest G1–G11 + invariantes | PASS (ver `validation/results/F8_RESUMEN.md`) |
+| L1 | Tests mapper | PASS |
+| L2 | E2E new_site | PASS |
+| V1 | Tablas MAPE histórico | PASS* Plan B (`validation/results/v1_mape.json`) |
+| V2 | Backtest 12m | PASS* Plan B débil (`v2_backtest.json`) |
+| V3 | Diff cuadro préstamo + VAN independiente | PASS (`v3_loan_diff.json`) |
+| V4 | Scorecards 3–5 decisiones | PASS* packs ejecutados (`v4_scorecards.json`); entrevista real pendiente |
+| V5 | ActualResult + BiasProfile | PASS |
+| V6 | Acta sesión + Likert | PENDIENTE (plantilla lista) |
+| V7 | N/A o batería IA | N/A — F9 diferida |
 
 Carpeta sugerida local (gitignored si hay datos reales):  
 `validation/` con subcarpetas `fixtures/`, `results/`, `sessions/`.

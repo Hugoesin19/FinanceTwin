@@ -1,0 +1,46 @@
+{
+  "decisions": [
+    {
+      "id": "D1",
+      "title": "Abrir segunda tienda",
+      "pack": "new_site",
+      "hypothesis": "CAPEX 200k, ventas régimen 35k, funding deuda+equity",
+      "scorecard": {
+        "pack_correct": 1.0,
+        "capex_timing": 1.0,
+        "funding": 1.0,
+        "ops_effect": 1.0,
+        "report_clear": 1.0
+      },
+      "synthetic": true
+    },
+    {
+      "id": "D2",
+      "title": "Pedir préstamo liquidez",
+      "pack": "financing",
+      "hypothesis": "Préstamo 50k francés 36m TIN 5.5%",
+      "scorecard": {
+        "pack_correct": 1.0,
+        "capex_timing": 1.0,
+        "funding": 1.0,
+        "ops_effect": 0.8,
+        "report_clear": 1.0
+      },
+      "synthetic": true
+    },
+    {
+      "id": "D3",
+      "title": "Contratar 2 comerciales",
+      "pack": "hiring",
+      "hypothesis": "2 personas × 2800€ coste empresa, uplift ventas +8k",
+      "scorecard": {
+        "pack_correct": 1.0,
+        "capex_timing": 1.0,
+        "funding": 1.0,
+        "ops_effect": 1.0,
+        "report_clear": 0.8
+      },
+      "synthetic": true
+    }
+  ]
+}

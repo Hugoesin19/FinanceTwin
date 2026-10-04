@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finance Twin — Guía de usuario completa</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@600;700&display=swap");
+    :root {
+      --fg: #0f1c24;
+      --muted: #5a6b75;
+      --accent: #0b6e6b;
+      --line: #c9d4dc;
+      --soft: #e4f3f2;
+      --warn: #6b5200;
+      --warn-bg: #f7f1de;
+      --ok: #1a5c2e;
+      --ok-bg: #e8f3ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      color: var(--fg);
+      line-height: 1.55;
+      background: #f4f7f9;
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      background: #fff;
+      min-height: 100vh;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+    h1, h2, h3 {
+      font-family: "Fraunces", Georgia, serif;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    h1 { font-size: 2rem; margin: 0 0 0.4rem; color: var(--accent); }
+    h2 {
+      font-size: 1.45rem;
+      margin: 2.2rem 0 0.75rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--line);
+    }
+    h3 { font-size: 1.1rem; margin: 1.4rem 0 0.5rem; }
+    p, li { font-size: 1rem; color: var(--fg); }
+    .lead { font-size: 1.1rem; color: var(--muted); margin: 0 0 1.5rem; }
+    .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    .toc {
+      background: var(--soft);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .toc ol { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    .toc a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.9rem 1.1rem;
+      margin: 1rem 0;
+      background: #fafcfd;
+    }
+    .box.ok { background: var(--ok-bg); border-color: rgba(26,92,46,.25); }
+    .box.warn { background: var(--warn-bg); border-color: rgba(107,82,0,.25); }
+    .box strong { color: var(--accent); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.75rem 0 1.25rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.45rem 0.55rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.88em;
+      background: #eef2f5;
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+    .steps { counter-reset: step; list-style: none; padding: 0; }
+    .steps li {
+      counter-increment: step;
+      padding: 0.65rem 0 0.65rem 2.6rem;
+      position: relative;
+      border-bottom: 1px dashed var(--line);
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0.55rem;
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: grid;
+      place-items: center;
+    }
+    .print-bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--line);
+      padding: 0.65rem 0;
+      margin: -0.5rem 0 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .print-bar button, .print-bar a {
+      font: inherit;
+      font-weight: 600;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--fg);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .print-bar .primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    @media print {
+      body { background: #fff; }
+      .wrap { box-shadow: none; max-width: none; padding: 0; }
+      .print-bar { display: none !important; }
+      h2 { break-before: page; border-top: none; }
+      h2:first-of-type { break-before: avoid; }
+      .box, table, .steps li { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="print-bar no-print">
+      <button type="button" class="primary" onclick="window.print()">Imprimir / Guardar PDF</button>
+      <a href="/">Volver a Finance Twin</a>
+      <span style="color:var(--muted);font-size:0.85rem;">En el diálogo de impresión elige «Guardar como PDF».</span>
+    </div>
+
+    <h1>Finance Twin</h1>
+    <p class="lead">Guía completa para usar el programa y entender los números — aunque no sepas de finanzas.</p>
+    <p class="meta">Versión de producto local (P1–P15). Estilo novato · lenguaje claro · sin jerga innecesaria.</p>
+
+    <nav class="toc" aria-label="Índice">
+      <strong>Índice</strong>
+      <ol>
+        <li><a href="#que-es">Qué es esto (en una frase)</a></li>
+        <li><a href="#arrancar">Cómo arrancar</a></li>
+        <li><a href="#mapa">Mapa de la pantalla</a></li>
+        <li><a href="#primeros-pasos">Tus dos primeros caminos</a></li>
+        <li><a href="#empresa">La empresa y el “twin”</a></li>
+        <li><a href="#decidir">Simular una decisión</a></li>
+        <li><a href="#resultado">Cómo leer el resultado</a></li>
+        <li><a href="#glosario">Glosario financiero fácil</a></li>
+        <li><a href="#packs">Cada tipo de decisión, explicado</a></li>
+        <li><a href="#liquidez">Revisar liquidez</a></li>
+        <li><a href="#seguimiento">Seguimiento (plan vs realidad)</a></li>
+        <li><a href="#errores">Si algo falla</a></li>
+        <li><a href="#limites">Qué hace y qué no hace el programa</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="que-es">1. Qué es esto (en una frase)</h2>
+    <p>
+      <strong>Finance Twin te deja “probar” una decisión de dinero en un ordenador antes de gastar el dinero de verdad.</strong>
+      Por ejemplo: abrir una tienda, pedir un préstamo, contratar a alguien o ver si aguantas unos meses malos de ventas.
+    </p>
+    <div class="box ok">
+      <strong>Idea clave:</strong> el programa construye un <em>gemelo</em> (copia simplificada) de cómo entra y sale el dinero en tu empresa.
+      Luego simula “¿y si hago X?” y te dice, con números del motor (no inventados en pantalla): si crea valor, si la caja aguanta y si rompes tus reglas.
+    </div>
+    <p>No es un banco, no aprueba préstamos y no sustituye a un asesor fiscal. Es un simulador de decisiones.</p>
+
+    <h2 id="arrancar">2. Cómo arrancar</h2>
+    <ol class="steps">
+      <li>En el ordenador debe estar levantada la API (normalmente en el puerto 8000).</li>
+      <li>Abre el navegador en <code>http://127.0.0.1:8000/</code>.</li>
+      <li>Verás la pantalla de <strong>Inicio</strong> con dos caminos grandes si aún no hay empresa.</li>
+    </ol>
+    <div class="box warn">
+      <strong>Importante:</strong> esta versión es local (en tu PC). No hay login ni usuarios. Los datos viven en una base SQLite del proyecto.
+    </div>
+
+    <h2 id="mapa">3. Mapa de la pantalla</h2>
+    <table>
+      <thead><tr><th>Zona</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Barra izquierda</strong></td><td>Navegación: Inicio, Decidir, Liquidez, Resultado, Seguimiento, Datos.</td></tr>
+        <tr><td><strong>Barra superior</strong></td><td>Empresa activa, botón crear y cargar demo.</td></tr>
+        <tr><td><strong>Inicio</strong></td><td>Elige qué quieres hacer hoy (3 trabajos grandes).</td></tr>
+        <tr><td><strong>Datos</strong></td><td>Nombre, caja, ingresos y costes de la empresa (el twin).</td></tr>
+        <tr><td><strong>Decidir</strong></td><td>Asistente para simular una decisión de inversión/financiación.</td></tr>
+        <tr><td><strong>Liquidez</strong></td><td>Pregunta “¿aguanto de caja?” con estrés de ventas/gastos.</td></tr>
+        <tr><td><strong>Resultado</strong></td><td>La respuesta grande (VAN o caja mínima) + detalle bajo demanda.</td></tr>
+        <tr><td><strong>Seguimiento</strong></td><td>Guardar la decisión y comparar lo previsto con lo real.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="primeros-pasos">4. Tus dos primeros caminos</h2>
+    <h3>Opción A — Cargar demo (recomendado la primera vez)</h3>
+    <ol class="steps">
+      <li>Pulsa <strong>Cargar demo (tienda)</strong>.</li>
+      <li>El programa crea una empresa de ejemplo, guarda su twin y calcula sola una apertura de tienda.</li>
+      <li>Te lleva a <strong>Resultado</strong> con un banner verde: “Demo lista…”.</li>
+      <li>Lee el número grande y la frase debajo. Luego prueba “Registrar decisión” o “Ajustar hipótesis”.</li>
+    </ol>
+
+    <h3>Opción B — Crear tu empresa a mano</h3>
+    <ol class="steps">
+      <li>Pulsa <strong>Crear mi empresa</strong> (o “+ Crear empresa” arriba).</li>
+      <li>Rellena nombre, caja inicial y caja mínima.</li>
+      <li>Pulsa <strong>Crear empresa</strong>.</li>
+      <li>(Opcional) Añade ingresos y costes; pulsa <strong>Actualizar twin</strong>.</li>
+      <li>Ve a <strong>Decidir</strong> o <strong>Liquidez</strong>.</li>
+    </ol>
+    <div class="box">
+      <strong>Truco:</strong> sin empresa, las tarjetas Decidir / Liquidez / Seguimiento están “apagadas” a propósito. Primero crea o carga demo.
+    </div>
+
+    <h2 id="empresa">5. La empresa y el “twin”</h2>
+    <p>
+      El <strong>twin</strong> (gemelo financiero) es la foto de cómo funciona tu negocio <em>hoy</em>, antes de la decisión:
+      cuánta caja tienes, qué ingresos recurrentes, qué costes fijos y cuál es tu “línea roja” de caja.
+    </p>
+    <table>
+      <thead><tr><th>Campo</th><th>Qué significa en cristiano</th></tr></thead>
+      <tbody>
+        <tr><td>Caja inicial</td><td>Dinero disponible al empezar la simulación (como el saldo del banco al día 0).</td></tr>
+        <tr><td>Caja mínima</td><td>Tu política: “no quiero bajar de X €”. Si la simulación baja de eso, verás aviso.</td></tr>
+        <tr><td>Ingresos</td><td>Dinero que entra cada mes (ventas, etc.).</td></tr>
+        <tr><td>Costes</td><td>Dinero que sale cada mes (alquiler de la base, sueldos base, etc.).</td></tr>
+        <tr><td>IVA / IS</td><td>Impuestos. En muchas demos van a 0 para simplificar; en un caso real se rellenan.</td></tr>
+        <tr><td>Calidad del twin</td><td>Checklist de “qué hay / qué falta”. No es una nota inventada: es factual.</td></tr>
+      </tbody>
+    </table>
+    <div class="box warn">
+      <strong>Porcentajes:</strong> se escriben como fracción. <code>0.40</code> = 40 %. Si pones <code>40</code> por error, el modelo se vuelve absurdo.
+    </div>
+
+    <h2 id="decidir">6. Simular una decisión</h2>
+    <p>En <strong>Decidir</strong> hay un asistente de 3 pasos:</p>
+    <ol class="steps">
+      <li><strong>¿Qué decisión?</strong> Elige un tipo (abrir local, préstamo, activo, contratar…).</li>
+      <li><strong>Hipótesis</strong> Rellena los números de tu idea (CAPEX, ventas, alquiler…). Escenario Base / Conservador / Adverso.</li>
+      <li><strong>Calcular</strong> Una pulsación. El motor calcula; la pantalla solo muestra.</li>
+    </ol>
+    <p>
+      <strong>Comparar 3 escenarios</strong> lanza tres cálculos (base, conservador, adverso) con las mismas hipótesis base
+      y te muestra una tabla lado a lado. Útil para ver “¿y si va peor?”.
+    </p>
+
+    <h2 id="resultado">7. Cómo leer el resultado</h2>
+    <p>La pantalla de Resultado está pensada para responder <strong>una pregunta en 5 segundos</strong>.</p>
+
+    <h3>El número grande (hero)</h3>
+    <ul>
+      <li>En decisiones de inversión → suele ser el <strong>VAN</strong> (¿crea valor?).</li>
+      <li>En liquidez → es la <strong>caja más baja</strong> del periodo (¿aguanto?).</li>
+    </ul>
+
+    <h3>La frase de lectura</h3>
+    <p>Resume en lenguaje humano lo que dicen los datos del motor (caja mínima + si las políticas pasan o no).</p>
+
+    <h3>Políticas: OK / Atención</h3>
+    <ul>
+      <li><strong>OK</strong>: tus reglas (p. ej. caja mínima) se cumplen en ese escenario.</li>
+      <li><strong>Atención</strong>: alguna regla falla. No ignores esto aunque el VAN sea bonito: puedes “ganar” en papel y quedarte sin liquidez.</li>
+    </ul>
+
+    <h3>Otros indicadores</h3>
+    <p>Debajo verás TIR, payback, meses bajo política, etc. Léelos con el glosario de la sección 8.</p>
+
+    <h3>Botones útiles</h3>
+    <table>
+      <thead><tr><th>Botón</th><th>Cuándo usarlo</th></tr></thead>
+      <tbody>
+        <tr><td>Registrar decisión</td><td>Cuando quieres guardar esta simulación como “la que vamos a seguir”.</td></tr>
+        <tr><td>Descargar informe</td><td>HTML ejecutivo para enviar o archivar (solo números del cálculo).</td></tr>
+        <tr><td>Ajustar hipótesis</td><td>Volver atrás y cambiar supuestos.</td></tr>
+        <tr><td>Más acciones → Comparar 3</td><td>Base vs conservador vs adverso.</td></tr>
+        <tr><td>Más acciones → ¿Qué tendría que pasar?</td><td>Sensibilidad (sobre todo nuevo establecimiento).</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Detalle bajo demanda</h3>
+    <p>Caja mes a mes, políticas, comparación y trazabilidad están ocultos hasta que los abres. Así no te aturdes.</p>
+
+    <div class="box ok">
+      <strong>Cómo decidir con cabeza:</strong>
+      <ol>
+        <li>¿El VAN es positivo? (crea valor con la tasa de descuento usada)</li>
+        <li>¿La caja mínima respeta tu política?</li>
+        <li>¿El escenario adverso sigue siendo aceptable?</li>
+        <li>Si no: cambia financiación, CAPEX, timing o no hagas la decisión.</li>
+      </ol>
+    </div>
+
+    <h2 id="glosario">8. Glosario financiero fácil</h2>
+    <table>
+      <thead><tr><th>Término</th><th>Explicación simple</th><th>Cómo interpretarlo</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Caja / liquidez</strong></td>
+          <td>Dinero disponible para pagar nóminas, proveedores, etc.</td>
+          <td>Si se agota, da igual que el proyecto sea “rentable” a 5 años: quiebras antes.</td>
+        </tr>
+        <tr>
+          <td><strong>Caja mínima (política)</strong></td>
+          <td>El colchón que te has prometido no romper.</td>
+          <td>Si el resultado dice que bajas de ese nivel, hay riesgo operativo.</td>
+        </tr>
+        <tr>
+          <td><strong>Caja más baja (min_cash)</strong></td>
+          <td>El punto más flojo de caja en todo el horizonte simulado.</td>
+          <td>Es el “peor mes” de liquidez del escenario. Míralo siempre.</td>
+        </tr>
+        <tr>
+          <td><strong>CAPEX</strong></td>
+          <td>Inversión inicial (obras, maquinaria, fianza grande…).</td>
+          <td>Sale de caja (o se financia) al principio.</td>
+        </tr>
+        <tr>
+          <td><strong>Opex</strong></td>
+          <td>Gastos de operar (alquiler, sueldos, luz…).</td>
+          <td>Sale cada mes; come caja aunque no haya CAPEX.</td>
+        </tr>
+        <tr>
+          <td><strong>Margen bruto</strong></td>
+          <td>De cada euro de venta, qué queda tras el coste directo.</td>
+          <td><code>0.40</code> = te quedan 40 céntimos de cada euro antes de fijos.</td>
+        </tr>
+        <tr>
+          <td><strong>VAN (Valor Actual Neto)</strong></td>
+          <td>¿Cuánto valor crea el proyecto en dinero de hoy, descontando el tiempo?</td>
+          <td><strong>VAN &gt; 0</strong>: suele ser atractivo. <strong>VAN &lt; 0</strong>: destruye valor con esa tasa. No es “beneficio contable”.</td>
+        </tr>
+        <tr>
+          <td><strong>Tasa de descuento</strong></td>
+          <td>El “precio del tiempo / riesgo” que usas para traer flujos a hoy (ej. 8 % = <code>0.08</code>).</td>
+          <td>Si subes la tasa, el VAN baja (eres más exigente).</td>
+        </tr>
+        <tr>
+          <td><strong>TIR</strong></td>
+          <td>Rentabilidad anual implícita del proyecto.</td>
+          <td>Si la TIR es mayor que tu tasa exigida, el proyecto “compensa” el riesgo. Compárala con alternativas (banco, otro negocio).</td>
+        </tr>
+        <tr>
+          <td><strong>Payback simple</strong></td>
+          <td>En cuántos periodos recuperas la inversión sin descontar el tiempo.</td>
+          <td>Más corto = recuperas antes (pero ignora el valor del dinero en el tiempo).</td>
+        </tr>
+        <tr>
+          <td><strong>Payback descontado</strong></td>
+          <td>Igual, pero contando que 1 € futuro vale menos que 1 € hoy.</td>
+          <td>Más realista que el simple; suele ser más largo.</td>
+        </tr>
+        <tr>
+          <td><strong>Hueco vs política</strong></td>
+          <td>Cuánto te pasas por debajo de tu caja mínima.</td>
+          <td>Cuanto mayor, más financiación o ajuste necesitas.</td>
+        </tr>
+        <tr>
+          <td><strong>Escenario base / conservador / adverso</strong></td>
+          <td>Misma decisión con visiones más o menos optimistas.</td>
+          <td>Si solo el base es bueno y el adverso se rompe, el plan es frágil.</td>
+        </tr>
+        <tr>
+          <td><strong>Deuda / equity</strong></td>
+          <td>Cuánto financia el banco vs cuánto pones tú.</td>
+          <td>Más deuda = menos salida de caja inicial, pero cuotas e intereses después.</td>
+        </tr>
+        <tr>
+          <td><strong>TIN</strong></td>
+          <td>Tipo de interés nominal del préstamo.</td>
+          <td><code>0.055</code> = 5,5 % anual.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 id="packs">9. Cada tipo de decisión, explicado</h2>
+
+    <h3>Nuevo establecimiento</h3>
+    <p>Simulas abrir un local: CAPEX + ventas + alquiler + plantilla + mezcla deuda/capital.</p>
+    <ul>
+      <li><strong>Mira primero:</strong> VAN y caja más baja.</li>
+      <li><strong>Pregunta útil:</strong> “¿Aporto valor y no me quedo seco el mes de la reforma?”</li>
+    </ul>
+
+    <h3>Financiación</h3>
+    <p>Simulas pedir un préstamo y ver el efecto en caja (entra el principal, salen las cuotas).</p>
+    <ul>
+      <li><strong>Mira primero:</strong> caja más baja y si se evita el hueco de liquidez.</li>
+      <li><strong>Pregunta útil:</strong> “¿Este préstamo me salva el valle de caja o solo añade presión?”</li>
+    </ul>
+
+    <h3>Compra de activo</h3>
+    <p>Comprar furgoneta/máquina al contado, con préstamo o leasing; a veces con ahorro de opex.</p>
+    <ul>
+      <li><strong>Mira primero:</strong> VAN (si hay beneficio) y golpe de caja inicial.</li>
+    </ul>
+
+    <h3>Contratación</h3>
+    <p>Cuesta sueldo (coste empresa) y esperas más ventas (uplift).</p>
+    <ul>
+      <li><strong>Mira primero:</strong> si el uplift de margen cubre el coste y si la caja aguanta los primeros meses.</li>
+      <li><strong>Cuidado:</strong> si el uplift es optimista, el escenario adverso te lo dirá.</li>
+    </ul>
+
+    <h3>Inversión genérica</h3>
+    <p>CAPEX + beneficio esperado (más ingresos o menos opex). Útil cuando no encaja en los packs anteriores.</p>
+
+    <h3>Plan de liquidez</h3>
+    <p>No es “invertir”: es estresar la caja (baja de ventas, opex extra, pagos puntuales).</p>
+    <ul>
+      <li><strong>Mira primero:</strong> caja más baja y políticas.</li>
+      <li><strong>Pregunta útil:</strong> “Si las ventas caen un 10 %, ¿llego a fin de año sin romper la mínima?”</li>
+    </ul>
+
+    <h2 id="liquidez">10. Revisar liquidez</h2>
+    <p>Entra por la tarjeta <strong>¿Aguanto de caja?</strong> o el menú Liquidez.</p>
+    <ol class="steps">
+      <li>Revisa horizonte (cuántos meses miras) y ancla (mes de inicio).</li>
+      <li>Pon un ajuste de ventas negativo si quieres estrés (ej. <code>-0.10</code> = −10 %).</li>
+      <li>Añade opex extra o salidas puntuales si sabes que vendrá un pago gordo.</li>
+      <li>Calcula y lee la caja más baja + el semáforo de políticas.</li>
+    </ol>
+    <div class="box">
+      Para liquidez el twin debe tener ingresos/costes con sentido. Si el twin está vacío o incompleto, el resultado miente: completa <strong>Datos</strong> primero.
+    </div>
+
+    <h2 id="seguimiento">11. Seguimiento (plan vs realidad)</h2>
+    <p>Esto es el <strong>Twin Loop</strong>: no solo simular, sino aprender si eras optimista.</p>
+    <ol class="steps">
+      <li><strong>Registrar decisión</strong> — guardas el cálculo que acabas de hacer.</li>
+      <li><strong>Anotar lo real</strong> — cuando pase el mes, escribes qué ocurrió de verdad (ventas, caja…).</li>
+      <li><strong>Ver aprendizaje</strong> — el sistema calcula sesgos (te pasaste de optimista/pesimista).</li>
+      <li><strong>Calibración</strong> — con suficientes datos reales (suele hacer falta al menos 3), puede ofrecer hipótesis ajustadas. Tú las aplicas al formulario y vuelves a calcular.</li>
+    </ol>
+    <div class="box warn">
+      <strong>No es magia automática:</strong> con 1 sola decisión no “aprende”. Necesitas varios ciclos plan→real. Si la calibración no se ofrece, es normal: faltan observaciones.
+    </div>
+
+    <h2 id="errores">12. Si algo falla</h2>
+    <table>
+      <thead><tr><th>Síntoma</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td>No puedo entrar a Decidir</td><td>Crea empresa o carga demo.</td></tr>
+        <tr><td>“Falta el twin…”</td><td>En Datos, Crear empresa / Actualizar twin.</td></tr>
+        <tr><td>Resultado deshabilitado en el menú</td><td>Todavía no has calculado nada en esta sesión.</td></tr>
+        <tr><td>Números absurdos</td><td>Revisa porcentajes en 0–1 y unidades (€, meses).</td></tr>
+        <tr><td>Muchas “Demo Tienda SL” en el desplegable</td><td>Cada demo crea una empresa nueva; elige la última o crea una con nombre claro.</td></tr>
+        <tr><td>Sensibilidad no aparece</td><td>Solo está pensada para nuevo establecimiento.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="limites">13. Qué hace y qué no hace el programa</h2>
+    <h3>Sí hace</h3>
+    <ul>
+      <li>Simular 6 tipos de decisión con un motor determinista.</li>
+      <li>Mostrar VAN, TIR, payback, caja y políticas calculados por el motor.</li>
+      <li>Comparar 3 escenarios y (en new_site) sensibilidad.</li>
+      <li>Descargar un informe HTML con los mismos números.</li>
+      <li>Registrar decisiones y comparar previsto vs real.</li>
+    </ul>
+    <h3>No hace (aún / a propósito)</h3>
+    <ul>
+      <li>No te conecta al banco ni a un ERP automáticamente.</li>
+      <li>No hay usuarios/contraseñas (versión local).</li>
+      <li>La pantalla <strong>nunca inventa</strong> un VAN: solo pinta lo que devuelve el cálculo.</li>
+      <li>No es consejo de inversión legal ni fiscal.</li>
+      <li>No hay chat de IA en esta versión.</li>
+    </ul>
+
+    <div class="box ok">
+      <strong>Checklist de primer uso (10 minutos)</strong>
+      <ol>
+        <li>Cargar demo → leer VAN y caja más baja.</li>
+        <li>Abrir “Caja mes a mes” y ver el valle.</li>
+        <li>Comparar 3 escenarios.</li>
+        <li>Registrar la decisión (aunque sea de prueba).</li>
+        <li>Crear tu empresa con datos inventados pero coherentes y repetir.</li>
+      </ol>
+    </div>
+
+    <p class="meta" style="margin-top:2.5rem;">
+      Documento orientado a usuario final. Los detalles técnicos de motor/API están en la carpeta <code>docs/</code> del proyecto
+      (<code>MOTOR_FINANCIERO.md</code>, <code>DECISION_PACKS.md</code>, <code>API.md</code>).
+      Para generar PDF: botón “Imprimir / Guardar PDF” arriba.
+    </p>
+  </div>
+</body>
+</html>

@@ -15,10 +15,12 @@ Finance Twin builds a financial twin of a company so managers can simulate major
 
 ## Documentación
 
-**Al programar:** seguir [`docs/PLAN_IMPLEMENTACION.md`](docs/PLAN_IMPLEMENTACION.md) (fase activa + reglas anti-alucinación).
+**Al programar producto usable:** [`docs/PLAN_PRODUCTO.md`](docs/PLAN_PRODUCTO.md) (P1–P8; F9 diferida).  
+**Reglas + fundación F0–F8:** [`docs/PLAN_IMPLEMENTACION.md`](docs/PLAN_IMPLEMENTACION.md).
 
 - [`docs/DOCUMENTACION.md`](docs/DOCUMENTACION.md) — inventario
-- [`docs/PLAN_IMPLEMENTACION.md`](docs/PLAN_IMPLEMENTACION.md) — **plan de implementación**
+- [`docs/PLAN_PRODUCTO.md`](docs/PLAN_PRODUCTO.md) — **plan producto (activo)**
+- [`docs/PLAN_IMPLEMENTACION.md`](docs/PLAN_IMPLEMENTACION.md) — plan fundación F0–F8
 - [`docs/PRODUCTO.md`](docs/PRODUCTO.md) — producto
 - [`docs/MOTOR_FINANCIERO.md`](docs/MOTOR_FINANCIERO.md) — motor
 - [`docs/MODELO_DATOS.md`](docs/MODELO_DATOS.md) — datos
@@ -27,7 +29,7 @@ Finance Twin builds a financial twin of a company so managers can simulate major
 
 ## Status
 
-Fase activa: **F8** (validación TFG). F0–F7 cerradas (motor → Twin Loop).
+Producto **uso C** + UX P14/P15: onboarding Crear/Demo, jobs gated, wizards, resultado narrado (P1–P15). Auth/F9/deploy diferidos. V6 validación humana pendiente.
 
 ## Repository
 

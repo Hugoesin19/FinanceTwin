@@ -1,0 +1,9 @@
+{
+  "notes": "Cuadro bancario genérico Plan B (francés TIN/12). No es un banco real.",
+  "principal": "100000",
+  "annual_interest_rate": "0.06",
+  "term_months": 12,
+  "amortization_system": "french",
+  "grace_months": 0,
+  "tolerance_payment_eur": "0.05"
+}

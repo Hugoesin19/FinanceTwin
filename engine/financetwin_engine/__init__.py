@@ -1,5 +1,6 @@
 """Finance Twin financial engine — library only, no I/O."""
 
+from financetwin_engine.analytics.sensitivity import run_analysis
 from financetwin_engine.calc.engine import calculate
 from financetwin_engine.calc.loans import LoanSchedule, build_loan_schedule
 from financetwin_engine.calc.metrics import InvestmentMetrics, calculate_investment_metrics
@@ -72,4 +73,5 @@ __all__ = [
     "LiquidityPlanPack",
     "run_bundle",
     "run_variant",
+    "run_analysis",
 ]

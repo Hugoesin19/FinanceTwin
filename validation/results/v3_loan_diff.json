@@ -1,0 +1,7 @@
+{
+  "expected_payment": "8606.64",
+  "months_within_tol": 12,
+  "months_total": 12,
+  "tolerance_eur": "0.05",
+  "final_principal": "0.00"
+}

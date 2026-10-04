@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-10-04 10:45 UTC",
+  "suites": {
+    "L0_golden_invariants": {
+      "pass": true,
+      "exit_code": 0
+    },
+    "L1_mapper": {
+      "pass": true,
+      "exit_code": 0
+    },
+    "L2_new_site": {
+      "pass": true,
+      "exit_code": 0
+    },
+    "V1_V5_plan_b": {
+      "pass": true,
+      "exit_code": 0
+    },
+    "API_regression": {
+      "pass": true,
+      "exit_code": 0
+    }
+  },
+  "v4_mean": 0.9733333333333333,
+  "section_10_complete": false,
+  "v6_status": "pending_session"
+}

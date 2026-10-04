@@ -60,10 +60,19 @@ def test_ui_index_served(client: TestClient) -> None:
     assert "text/html" in r.headers["content-type"]
     assert "Decision Studio" in r.text
     assert "/static/app.js" in r.text
-    # Defaults del camino feliz presentes en el HTML
+    # Defaults twin + selector de packs (P2)
     assert 'id="opening_cash" value="80000"' in r.text
-    assert 'id="capex_total" value="350000"' in r.text
-    assert 'id="site_name" value="Tienda Alicante"' in r.text
+    assert 'id="pack_id"' in r.text
+    assert 'id="pack_fields"' in r.text
+    for pack in (
+        "new_site",
+        "financing",
+        "asset_purchase",
+        "hiring",
+        "generic_investment",
+        "liquidity_plan",
+    ):
+        assert f'value="{pack}"' in r.text
 
 
 def test_ui_static_assets_use_engine_field_names(client: TestClient) -> None:
@@ -75,6 +84,11 @@ def test_ui_static_assets_use_engine_field_names(client: TestClient) -> None:
     assert "first_shortfall_month" in js.text
     assert "hydrateTwin" in js.text
     assert "restoreSession" in js.text
+    # P2: API genérica, no hardcode solo new_site
+    assert "/packs/${packId}/run" in js.text or "/packs/${" in js.text
+    assert "PACK_FORMS" in js.text
+    assert "Tienda Alicante" in js.text
+    assert "350000" in js.text
     # No inventar aliases
     assert "funding_gap" not in js.text
     assert "payback_months" not in js.text

@@ -286,7 +286,14 @@ No reordenar. No fusionar fases “para ir más rápido” sin acuerdo explícit
 
 **DoD:** criterios §10 de VALIDACION.
 
-**Estado:** `PENDIENTE`
+**Estado:** `HECHA` (Plan B automatizable; **V6 sesión humana pendiente** → §10 parcial)
+
+**Entregables:**
+- `validation/` — fixtures sintéticas, tests V1–V5 Plan B, `generate_report.py`
+- `validation/results/F8_RESUMEN.md` — matriz evidencias + veredicto §10
+- `validation/sessions/V6_PLANTILLA_ACTA.md` — plantilla Likert/acta
+- Limitaciones documentadas (IVA, Plan B, francés mid-horizon)
+- Auditoría 1.8.1: MAPE Decimal; V1+ruido; V4 packs ejecutados; artefactos JSON; §10 parcial explícito (V6)
 
 ---
 
@@ -314,7 +321,10 @@ Marcar solo cuando la fase correspondiente esté HECHA.
 | Persistencia + API mínima | F5 | [x] |
 | UI mínima | F6 | [x] |
 | Twin Loop / History | F7 | [x] |
-| Evidencia validación TFG | F8 | [ ] |
+| Evidencia validación TFG | F8 | [x]* |
+
+\* Plan B + informe; V6 sesión real aún pendiente (§10.6).
+
 
 Should/could de PRODUCTO: **fuera** hasta cerrar esta tabla.
 
@@ -390,10 +400,13 @@ No bloquear F1 por no tener `ARQUITECTURA.md` completo.
 | F5 | API + BD | HECHA |
 | F6 | UI mínima | HECHA |
 | F7 | Twin Loop | HECHA |
-| F8 | Validación TFG | PENDIENTE |
+| F8 | Validación TFG | HECHA* |
 | F9 | IA | DIFERIDA |
 
-**Fase activa actual:** `F8`
+\* F8 Plan B automatizable PASS; V6 sesión humana pendiente.
+
+**Fase activa actual:** `F9` (diferida) — **desarrollo de producto usable → [`PLAN_PRODUCTO.md`](PLAN_PRODUCTO.md) fase P1**
+
 
 ---
 
@@ -421,6 +434,9 @@ No bloquear F1 por no tener `ARQUITECTURA.md` completo.
 | 1.6.1 | 2026-10-03 | Auditoría F6: restore/hidratar twin; clear report on error; snapshot 404 company vs empty; golden NPV; +tests |
 | 1.7 | 2026-10-03 | F7 HECHA (Decision/ActualResult/BiasProfile; V5 fixture; calibración solo n≥3); fase activa → F8 |
 | 1.7.1 | 2026-10-03 | Auditoría F7: n=decisiones; catálogo variable_key/pack/status; pack mapping calibración; +tests edge |
+| 1.8 | 2026-10-04 | F8 HECHA Plan B (`validation/` + F8_RESUMEN); V6 plantilla pendiente sesión; fase → cierre/V6 o F9 diferida |
+| 1.8.1 | 2026-10-04 | Auditoría F8: MAPE sin float; V1 ruido controlado; V4 ejecuta packs; artefactos v1–v4 JSON; informe §10 más honesto |
+| 1.9 | 2026-10-04 | Continuación producto en `PLAN_PRODUCTO.md` (P1–P5); este plan queda como fundación + F9 diferida |
 
 ---
 

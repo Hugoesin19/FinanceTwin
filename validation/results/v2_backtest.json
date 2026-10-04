@@ -1,0 +1,6 @@
+{
+  "mape_closing_cash": "0",
+  "t_min_real": 11,
+  "t_min_pred": 11,
+  "note": "Plan B weak backtest (first 12m); mid-horizon French restart not claimed PASS"
+}
