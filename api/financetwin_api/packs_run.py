@@ -205,6 +205,7 @@ def run_pack_for_company(
         "inputs_hash": mapped.inputs_hash,
         "result_hash": result.result_hash,
         "actual_keys": list(pack.actual_keys()),
+        "resolved_inputs": to_jsonable(resolved),
         "investment_metrics": metrics,
         "financing_need": to_jsonable(result.financing_need),
         "policy_checks": to_jsonable(result.policy_checks),

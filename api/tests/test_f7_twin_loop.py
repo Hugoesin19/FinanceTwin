@@ -77,6 +77,7 @@ def _executed_decision(
             "status": "executed",
             "rationale": "Decisión piloto V5",
             "owner_user_id": "tester",
+            "pack_inputs": INPUTS,
         },
     )
     assert d.status_code == 200, d.text
@@ -84,6 +85,8 @@ def _executed_decision(
     assert body["status"] == "executed"
     assert body["number"] >= 1
     assert len(body["milestones"]) == 3
+    assert body.get("forecast_by_key", {}).get("sales_monthly") == "40000"
+    assert "sales_monthly" in (body.get("actual_keys") or [])
     return body["id"]
 
 
@@ -259,8 +262,8 @@ def test_forecast_zero_null_deviation_and_warning(client: TestClient) -> None:
     assert profiles == []
 
 
-def test_n_counts_decisions_not_periods(client: TestClient) -> None:
-    """Varios periodos en la misma decisión = 1 observación de bias."""
+def test_n_counts_periods_on_same_decision(client: TestClient) -> None:
+    """Varios periodos en la misma decisión cuentan para bias/calibración."""
     company_id = client.post("/companies", json={"name": "N"}).json()["id"]
     client.put(f"/companies/{company_id}/snapshot", json={"snapshot": SNAP})
     run_id = _run_new_site(client, company_id)
@@ -284,14 +287,17 @@ def test_n_counts_decisions_not_periods(client: TestClient) -> None:
         f"/companies/{company_id}/packs/new_site/bias-profiles"
     ).json()["profiles"]
     sales = next(p for p in profiles if p["variable_key"] == "sales_monthly")
-    assert sales["n_observations"] == 1
-    # latest period actual 32000 → bias 0.20
-    assert Decimal(sales["median_bias"]) == Decimal("0.20")
+    assert sales["n_observations"] == 3
+    # median of 0.10, 0.18, 0.20 → 0.18
+    assert abs(Decimal(sales["median_bias"]) - Decimal("0.18")) < Decimal("1e-9")
     preview = client.post(
         f"/companies/{company_id}/packs/new_site/calibration/preview",
         json={"inputs": INPUTS},
     ).json()
-    assert preview["offered"] is False
+    assert preview["offered"] is True
+    assert preview["calibrated_inputs"]["sales_run_rate"] == str(
+        calibrate_value("40000", "0.18")
+    )
 
 
 def test_invalid_pack_and_status(client: TestClient) -> None:

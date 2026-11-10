@@ -12,10 +12,59 @@ from financetwin_engine.analytics.bias import (
     DECISION_STATUSES,
     compute_bias_stats,
     deviation_pct,
+    forecast_by_key_from_inputs,
     key_to_input_for_pack,
     offer_calibration,
 )
 from financetwin_engine.calc.decimal_money import D
+from financetwin_engine.packs.asset_purchase import AssetPurchasePack
+from financetwin_engine.packs.financing import FinancingPack
+from financetwin_engine.packs.generic_investment import GenericInvestmentPack
+from financetwin_engine.packs.hiring import HiringPack
+from financetwin_engine.packs.liquidity_plan import LiquidityPlanPack
+from financetwin_engine.packs.new_site import NewSitePack
+
+
+def _pack_actual_keys(decision_pack_id: str) -> list[str]:
+    registry = {
+        "new_site": NewSitePack,
+        "financing": FinancingPack,
+        "asset_purchase": AssetPurchasePack,
+        "hiring": HiringPack,
+        "generic_investment": GenericInvestmentPack,
+        "liquidity_plan": LiquidityPlanPack,
+    }
+    cls = registry.get(decision_pack_id)
+    if cls is None:
+        return ["sales_monthly", "min_cash"]
+    return list(cls().actual_keys())
+
+
+def _baseline_sales_monthly(store: Store, company_id: str) -> str | None:
+    cur = store.get_current_snapshot(company_id)
+    if cur is None:
+        return None
+    snap = cur[1] if isinstance(cur[1], dict) else {}
+    streams = snap.get("revenue_streams") or []
+    if not streams:
+        return None
+    total = D(0)
+    for s in streams:
+        if isinstance(s, dict) and s.get("base_monthly_revenue") is not None:
+            total += D(s["base_monthly_revenue"])
+    return str(total)
+
+
+def enrich_decision_forecast(decision: dict[str, Any]) -> dict[str, Any]:
+    """Añade actual_keys + forecast_by_key legibles para la UI."""
+    frozen = decision.get("frozen_projection") or {}
+    keys = list(frozen.get("actual_keys") or [])
+    forecast = dict(frozen.get("forecast_by_key") or {})
+    if not keys:
+        keys = _pack_actual_keys(decision.get("decision_pack_id") or "")
+    decision["actual_keys"] = keys
+    decision["forecast_by_key"] = forecast
+    return decision
 
 ALLOWED_TRANSITIONS = {
     "draft": {"approved", "rejected", "deferred", "cancelled"},
@@ -80,6 +129,7 @@ def register_decision(
     policy_exceptions: list | None = None,
     conditions: str | None = None,
     calibrated_scenario_id: str | None = None,
+    pack_inputs: dict[str, Any] | None = None,
     create_default_milestones: bool = True,
 ) -> dict[str, Any]:
     if store.get_company(company_id) is None:
@@ -102,6 +152,15 @@ def register_decision(
 
     number = store.next_decision_number(company_id)
     forecast = forecast_metrics_from_run(run)
+    actual_keys = _pack_actual_keys(decision_pack_id)
+    inputs = pack_inputs or {}
+    forecast_by_key = forecast_by_key_from_inputs(
+        decision_pack_id=decision_pack_id,
+        actual_keys=actual_keys,
+        pack_inputs=inputs,
+        run_results=run.get("results") or {},
+        baseline_sales_monthly=_baseline_sales_monthly(store, company_id),
+    )
     did = store.create_decision(
         {
             "company_id": company_id,
@@ -117,6 +176,9 @@ def register_decision(
             "forecast_metrics": forecast,
             "frozen_projection": {
                 "cash_flow": (run.get("results") or {}).get("cash_flow"),
+                "pack_inputs": inputs,
+                "actual_keys": actual_keys,
+                "forecast_by_key": forecast_by_key,
             },
             "rationale": rationale or "",
             "owner_user_id": owner_user_id,
@@ -132,7 +194,7 @@ def register_decision(
         store.add_milestones(did, default_milestones(decision_date))
     out = store.get_decision(did)
     assert out is not None
-    return out
+    return enrich_decision_forecast(out)
 
 
 def transition_decision(store: Store, decision_id: str, new_status: str) -> dict[str, Any]:
@@ -149,7 +211,7 @@ def transition_decision(store: Store, decision_id: str, new_status: str) -> dict
     store.update_decision_status(decision_id, new_status)
     out = store.get_decision(decision_id)
     assert out is not None
-    return out
+    return enrich_decision_forecast(out)
 
 
 def record_actuals(
@@ -237,6 +299,20 @@ def _refresh_bias_profile(
             "confidence": stats.confidence,
         }
     )
+
+
+def refresh_pack_bias_profiles(
+    store: Store, *, company_id: str, decision_pack_id: str
+) -> list[dict[str, Any]]:
+    """Recalcula perfiles del pack (p. ej. tras cambiar la regla de conteo)."""
+    for key in sorted(CANONICAL_VARIABLE_KEYS):
+        _refresh_bias_profile(
+            store,
+            company_id=company_id,
+            decision_pack_id=decision_pack_id,
+            variable_key=key,
+        )
+    return store.list_bias_profiles(company_id, decision_pack_id)
 
 
 def preview_calibration(

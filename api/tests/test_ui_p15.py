@@ -24,11 +24,13 @@ def test_ui_p15_onboarding(client: TestClient) -> None:
     assert 'id="btn-create-home"' in html
     assert 'id="btn-create-top"' in html
     assert "— Seleccionar —" in html
-    assert "Crear mi empresa" in html or "Crear empresa" in html
-    assert "Empezar →" in html
+    assert "Crear empresa" in html
+    assert "Abrir →" in html or "Continuar →" in html
     assert 'id="nav-report"' in html
     assert 'id="demo_banner"' in html
     assert 'id="home-company-card"' in html
+    assert 'id="home_company_name"' in html
+    assert "Sin empresa no puedes continuar" in html
 
 
 def test_ui_p15_formatters_and_no_math(client: TestClient) -> None:

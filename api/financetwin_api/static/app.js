@@ -7,6 +7,8 @@
   const LS_COMPANY = "ft_company_id";
   const LS_NAME = "ft_company_name";
   const LS_PACK = "ft_pack_id";
+  const LS_ORG_TOKEN = "ft_org_token";
+  const LS_COACH_DONE = "ft_coach_done";
 
   const STEPS = ["home", "twin", "decision", "liquidity", "report", "followup"];
   const STEP_SECTIONS = {
@@ -22,10 +24,17 @@
   const ADVANCED_KEYS = {
     new_site: ["collection_days", "discount_rate_annual", "employer_cost_per_person", "headcount"],
     financing: ["linked_capex", "use_of_funds"],
-    asset_purchase: ["leasing_monthly", "leasing_term_months", "discount_rate_annual"],
+    asset_purchase: [
+      "loan_principal",
+      "loan_annual_rate",
+      "loan_term_months",
+      "leasing_monthly",
+      "leasing_term_months",
+      "discount_rate_annual",
+    ],
     hiring: ["discount_rate_annual", "gross_margin_pct"],
     generic_investment: ["debt_amount", "equity_amount", "discount_rate_annual", "gross_margin_pct"],
-    liquidity_plan: ["one_off_outflows"],
+    liquidity_plan: ["one_off_outflows", "extra_monthly_opex"],
   };
 
   /** Campos canónicos por pack (DECISION_PACKS / inputs_schema). Defaults = camino feliz. */
@@ -73,23 +82,26 @@
       ],
     },
     asset_purchase: {
-      title: "Compra de activo",
-      hint: "Comprar maquinaria/vehículo: contado, préstamo o leasing.",
+      title: "Compra / uso de activo",
+      hint: "Contado, préstamo (tú pones el plazo), leasing o renting (cuota operativa).",
       fields: [
         { key: "asset_name", label: "Activo", type: "text", value: "Furgoneta" },
-        { key: "acquisition_cost", label: "Coste de adquisición", type: "money", value: "25000" },
-        { key: "acquisition_year_month", label: "Mes de adquisición", type: "text", value: "2027-01" },
+        { key: "acquisition_cost", label: "Coste de adquisición / valor", type: "money", value: "25000" },
+        { key: "acquisition_year_month", label: "Mes de inicio", type: "text", value: "2027-01" },
         { key: "useful_life_months", label: "Vida útil (meses)", type: "count", value: "60" },
         {
           key: "funding_mode",
-          label: "Cómo se paga",
+          label: "Cómo se paga / usa",
           type: "enum",
           value: "cash",
-          options: ["cash", "loan", "leasing_as_cost"],
+          options: ["cash", "loan", "leasing_as_cost", "renting_as_cost"],
         },
+        { key: "loan_principal", label: "Principal préstamo (si préstamo)", type: "money", value: "25000" },
+        { key: "loan_annual_rate", label: "TIN préstamo (0–1)", type: "rate", value: "0.055" },
+        { key: "loan_term_months", label: "Plazo préstamo en meses (ej. 36 corto, 84–120 largo)", type: "count", value: "60" },
         { key: "opex_savings_monthly", label: "Ahorro opex / mes", type: "money", value: "400" },
-        { key: "leasing_monthly", label: "Cuota leasing", type: "money", value: "" },
-        { key: "leasing_term_months", label: "Plazo leasing", type: "count", value: "" },
+        { key: "leasing_monthly", label: "Cuota leasing/renting €/mes", type: "money", value: "" },
+        { key: "leasing_term_months", label: "Plazo leasing/renting (meses)", type: "count", value: "" },
         { key: "horizon_months", label: "Horizonte", type: "count", value: "24" },
         { key: "discount_rate_annual", label: "Tasa descuento (0–1)", type: "rate", value: "0.08" },
       ],
@@ -143,17 +155,17 @@
     },
     liquidity_plan: {
       title: "Plan de liquidez",
-      hint: "Estrés de caja: ajuste de ventas, opex extra y salidas puntuales.",
+      hint: "Tú defines el estrés: ajuste de ventas, opex extra u otras salidas. Sin presets.",
       fields: [
-        { key: "horizon_months", label: "Horizonte", type: "count", value: "12" },
+        { key: "horizon_months", label: "Horizonte (meses)", type: "count", value: "12" },
         { key: "anchor_year_month", label: "Ancla (YYYY-MM)", type: "text", value: "2027-01" },
-        { key: "sales_adjustment_pct", label: "Ajuste ventas (p.ej. -0.10)", type: "rate", value: "-0.10" },
-        { key: "extra_monthly_opex", label: "Opex extra / mes", type: "money", value: "1000" },
+        { key: "sales_adjustment_pct", label: "Ajuste ventas (0 = igual; -0.10 = −10%)", type: "rate", value: "0" },
+        { key: "extra_monthly_opex", label: "Opex extra / mes", type: "money", value: "0" },
         {
           key: "one_off_outflows",
-          label: "Salidas puntuales (JSON)",
+          label: "Salidas puntuales (JSON avanzado)",
           type: "json",
-          value: '[{"year_month":"2027-03","amount":"5000","label":"tax"}]',
+          value: "[]",
         },
       ],
     },
@@ -239,9 +251,10 @@
     capex: "CAPEX",
     refinance_placeholder: "Refinanciar",
     general: "General",
-    cash: "Contado",
-    loan: "Préstamo",
-    leasing_as_cost: "Leasing",
+    cash: "Contado (pago al contado)",
+    loan: "Préstamo (corto o largo: tú pones el plazo)",
+    leasing_as_cost: "Leasing (cuota; simplificado)",
+    renting_as_cost: "Renting (cuota operativa; sin comprar)",
     monthly: "Mensual",
     annual: "Anual",
     opex_reduction: "Ahorro de opex",
@@ -253,6 +266,19 @@
     min_cash: "Caja más baja",
     npv: "VAN",
     irr_annual: "TIR anual",
+    gross_margin_pct: "Margen bruto",
+    capex_total: "Inversión (CAPEX)",
+    rent_monthly: "Alquiler mensual",
+    headcount: "Plantilla",
+    payroll_monthly: "Nómina mensual",
+  };
+
+  const DIRECTION_LABELS = {
+    optimistic: "Sueles ser optimista (previsto > real)",
+    pessimistic: "Sueles ser pesimista (previsto < real)",
+    neutral: "Sin sesgo claro",
+    overestimate: "Sueles sobreestimar",
+    underestimate: "Sueles subestimar",
   };
 
   const MONEY_METRIC_KEYS = new Set([
@@ -275,6 +301,8 @@
     companyId: null,
     modelVersionId: null,
     lastRun: null,
+    lastPackInputs: null,
+    lastForecastByKey: null,
     lastCompare: null,
     selectedDecisionId: null,
     lastCalib: null,
@@ -288,9 +316,333 @@
     wizStep: 1,
     fromDemo: false,
     successTimer: null,
+    lastSensitivity: null,
+    lastMonteCarlo: null,
+    lastScorecard: null,
+    lastTornado: null,
+    sabiDraft: null,
+    coachState: "need_start",
+    coachDismissed: localStorage.getItem(LS_COACH_DONE) === "1",
+    intentMode: null, // demo | sabi | manual
+    sabiStep: 1,
   };
 
   const $ = (id) => document.getElementById(id);
+
+  function deriveCoachState() {
+    if (!state.companyId) return "need_start";
+    if (!state.modelVersionId) return "need_twin";
+    if (!state.lastRun) return "need_run";
+    if (state.selectedDecisionId) return "done";
+    if (state.hasReport) return "need_follow";
+    return "need_read";
+  }
+
+  function renderCoach() {
+    const bar = $("coach_bar");
+    if (!bar) return;
+    if (state.coachDismissed && state.lastRun) {
+      bar.hidden = true;
+      return;
+    }
+    bar.hidden = false;
+    const st = deriveCoachState();
+    state.coachState = st;
+    const text = $("coach_text");
+    const cta = $("coach_cta");
+    const skip = $("coach_skip");
+    const copy = {
+      need_start: {
+        text: "Paso 1: cree una empresa o pulse Usar en la lista. Sin empresa no puede continuar.",
+        label: "Ir a empresas",
+        skip: false,
+      },
+      need_twin: {
+        text:
+          state.intentMode === "sabi"
+            ? "Paso 2: importe o complete el twin (SABI, CSV o manual) y guárdelo."
+            : "Paso 2: cargue el twin (demo, Excel o entrada manual) y guárdelo.",
+        label: "Ir a datos / twin",
+        skip: false,
+      },
+      need_run: {
+        text: "Paso 3: ejecute un pack de decisión o un análisis de liquidez.",
+        label: "Ir a simulación",
+        skip: true,
+      },
+      need_read: {
+        text: "Paso 4: revise el resultado (VAN / caja mínima y políticas).",
+        label: "Ver resultado",
+        skip: true,
+      },
+      need_follow: {
+        text: "Opcional: registre la decisión para el Twin Loop (previsto vs real).",
+        label: "Registrar decisión",
+        skip: true,
+      },
+      done: {
+        text: "Flujo completado. Puede continuar explorando escenarios.",
+        label: "Empresas",
+        skip: true,
+      },
+    };
+    const cfg = copy[st] || copy.need_start;
+    if (text) text.textContent = cfg.text;
+    if (cta) cta.textContent = cfg.label;
+    if (skip) {
+      skip.hidden = !cfg.skip;
+      skip.textContent = st === "done" ? "Ocultar asistencia" : "Omitir";
+    }
+  }
+
+  function runCoachCta() {
+    const st = state.coachState || deriveCoachState();
+    if (st === "need_start") {
+      goToStep("home");
+      return;
+    }
+    if (st === "need_twin") {
+      enterCompanyWorkspace({ showChooser: true });
+      return;
+    }
+    if (st === "need_run") {
+      goToStep(state.modelVersionId ? "decision" : "twin");
+      return;
+    }
+    if (st === "need_read") {
+      goToStep("report");
+      return;
+    }
+    if (st === "need_follow") {
+      goToStep("followup");
+      return;
+    }
+    goToStep("home");
+  }
+
+  function dismissCoach() {
+    state.coachDismissed = true;
+    localStorage.setItem(LS_COACH_DONE, "1");
+    renderCoach();
+  }
+
+  function setSabiStep(n) {
+    state.sabiStep = n;
+    for (let i = 1; i <= 3; i++) {
+      const el = $(`sabi-step-${i}`);
+      if (!el) continue;
+      el.classList.toggle("active", i === n);
+      el.classList.toggle("done", i < n);
+    }
+  }
+
+  function showDataPath(mode) {
+    const chooser = $("data_path_chooser");
+    const sabiFlow = $("sabi_flow");
+    const csvSec = $("sec-import");
+    const cash = $("sec-cash");
+    const revs = $("sec-revenues");
+    const costs = $("sec-costs");
+    if (chooser) chooser.hidden = true;
+    if (mode === "sabi") {
+      if (sabiFlow) sabiFlow.hidden = false;
+      if (csvSec) csvSec.open = false;
+      if (cash) cash.open = false;
+      if (revs) revs.open = false;
+      if (costs) costs.open = false;
+      setSabiStep(1);
+      state.intentMode = "sabi";
+      if ($("twin_workspace_lead")) {
+        $("twin_workspace_lead").textContent =
+          "Importación SABI/PGC: cargar archivo → previsualizar mapeo → confirmar e importar.";
+      }
+    } else if (mode === "csv") {
+      if (sabiFlow) sabiFlow.hidden = true;
+      if (csvSec) csvSec.open = true;
+      if (cash) cash.open = true;
+      if (revs) revs.open = false;
+      if (costs) costs.open = false;
+      state.intentMode = "manual";
+      if ($("twin_workspace_lead")) {
+        $("twin_workspace_lead").textContent =
+          "Plantilla CSV: descargue el esquema, complete las columnas e importe el fichero.";
+      }
+    } else {
+      if (sabiFlow) sabiFlow.hidden = true;
+      if (csvSec) csvSec.open = false;
+      if (cash) cash.open = true;
+      if (revs) revs.open = true;
+      if (costs) costs.open = true;
+      state.intentMode = "manual";
+      if ($("twin_workspace_lead")) {
+        $("twin_workspace_lead").textContent =
+          "Entrada manual: complete caja, ingresos y costes; a continuación Guardar twin.";
+      }
+    }
+    renderCoach();
+  }
+
+  function openTwinForIntent(mode) {
+    state.intentMode = mode;
+    goToStep("twin");
+    const chooser = $("data_path_chooser");
+    if (mode === "sabi") {
+      if (chooser) chooser.hidden = true;
+      showDataPath("sabi");
+    } else if (mode === "demo") {
+      if (chooser) chooser.hidden = true;
+      loadDemo().catch(showCaught);
+      return;
+    } else {
+      if (chooser) chooser.hidden = false;
+      const sabiFlow = $("sabi_flow");
+      if (sabiFlow) sabiFlow.hidden = true;
+      if ($("twin_workspace_lead")) {
+        $("twin_workspace_lead").textContent =
+          "Seleccione la fuente de datos. Sin twin no es posible simular.";
+      }
+      const cash = $("sec-cash");
+      if (cash) cash.open = false;
+    }
+    renderCoach();
+  }
+
+  function enterCompanyWorkspace(opts) {
+    const showChooser = !opts || opts.showChooser !== false;
+    goToStep("twin");
+    const chooser = $("data_path_chooser");
+    if (!state.modelVersionId || showChooser) {
+      if (chooser) chooser.hidden = false;
+      if ($("twin_workspace_lead")) {
+        $("twin_workspace_lead").textContent = state.modelVersionId
+          ? "Twin disponible. Puede actualizar datos o continuar a simulación."
+          : "Empresa creada. Seleccione la fuente de datos para construir el twin.";
+      }
+      const cash = $("sec-cash");
+      if (cash && !state.modelVersionId) cash.open = false;
+    } else if (chooser) {
+      chooser.hidden = true;
+    }
+    renderCoach();
+  }
+
+  function renderTradeoff(im, fn, policyOk, isLiquidity) {
+    const box = $("tradeoff_box");
+    if (!box) return;
+    box.hidden = false;
+    const npv = parseDecimalString(im && im.npv);
+    const valueOk = npv == null ? null : npv >= 0;
+    if (isLiquidity) {
+      box.className = "tradeoff-box " + (policyOk ? "ok" : "warn");
+      box.innerHTML = policyOk
+        ? "<strong>Lectura:</strong> Con estas hipótesis la caja respeta tu política en el horizonte."
+        : "<strong>Trade-off:</strong> La proyección rompe tu colchón de caja. Antes de seguir, baja gasto, busca financiación o revisa el estrés.";
+      return;
+    }
+    if (valueOk === true && policyOk) {
+      box.className = "tradeoff-box ok";
+      box.innerHTML =
+        "<strong>Lectura:</strong> Valor (VAN) y liquidez alineados: el proyecto crea valor y la caja aguanta la política.";
+    } else if (valueOk === true && !policyOk) {
+      box.className = "tradeoff-box warn";
+      box.innerHTML =
+        "<strong>Trade-off crítico:</strong> El VAN es atractivo, pero la caja rompe tu política. Rentable en papel, frágil en liquidez.";
+    } else if (valueOk === false && policyOk) {
+      box.className = "tradeoff-box warn";
+      box.innerHTML =
+        "<strong>Trade-off:</strong> La caja aguanta, pero el VAN no compensa (con la tasa usada). Revisa hipótesis o no inviertas.";
+    } else if (valueOk === false && !policyOk) {
+      box.className = "tradeoff-box warn";
+      box.innerHTML =
+        "<strong>Atención:</strong> Ni el valor ni la liquidez salen bien en este escenario. Compara el adverso o ajusta el plan.";
+    } else {
+      box.className = "tradeoff-box";
+      box.innerHTML =
+        "<strong>Lectura:</strong> Revisa VAN y caja mínima juntos; no decidas solo con una métrica.";
+    }
+  }
+
+  function renderRunway(fn) {
+    const el = $("runway_line");
+    if (!el || !fn) return;
+    const months = fn.months_below_policy;
+    const minMonth = fn.min_cash_month;
+    el.hidden = false;
+    if (months != null && Number(months) > 0) {
+      el.textContent = `Runway / tensión: ${months} mes(es) bajo política · caja más baja en t=${fmt(minMonth)}.`;
+    } else {
+      el.textContent = `Runway: sin meses bajo política en el horizonte · caja más baja en t=${fmt(minMonth)}.`;
+    }
+  }
+
+  function renderDscrFromRun(run) {
+    const host = $("dscr_block");
+    if (!host) return;
+    const pnl = (run.results && run.results.pnl) || [];
+    const cash = (run.results && run.results.cash_flow) || [];
+    const rows = [];
+    const n = pnl.length < cash.length ? pnl.length : cash.length;
+    for (let i = 0; i < n; i++) {
+      const ebitda = parseDecimalString(pnl[i].ebitda);
+      const service =
+        (parseDecimalString(cash[i].loan_principal_repaid) || 0) +
+        (parseDecimalString(cash[i].loan_interest_paid) || 0);
+      if (service > 0 && ebitda != null) {
+        rows.push({ t: cash[i].t, dscr: ebitda / service });
+      }
+    }
+    if (!rows.length) {
+      host.hidden = true;
+      host.innerHTML = "";
+      return;
+    }
+    host.hidden = false;
+    let min = rows[0];
+    for (let i = 1; i < rows.length; i++) {
+      if (rows[i].dscr < min.dscr) min = rows[i];
+    }
+    const dscrTxt = Number(min.dscr).toLocaleString("es-ES", {
+      maximumFractionDigits: 2,
+    });
+    host.innerHTML =
+      `<strong>DSCR (cobertura deuda)</strong> — mínimo ${dscrTxt}x en t=${min.t} (EBITDA / (principal+interés) del motor).`;
+  }
+
+  function renderScorecardFromRun(run, mc) {
+    const host = $("scorecard_block");
+    if (!host) return;
+    let card = run.scorecard || null;
+    if (!card) {
+      const im = run.investment_metrics || {};
+      const counts = policyCounts(run);
+      const npv = parseDecimalString(im.npv);
+      const valueScore = npv == null ? "—" : npv >= 0 ? "OK" : "Atención";
+      const liqScore = counts.fail === 0 ? "OK" : "Atención";
+      let riskScore = "—";
+      if (mc && mc.prob_npv_positive != null) {
+        const p = Number(mc.prob_npv_positive);
+        riskScore = p >= 0.7 ? "OK" : p >= 0.4 ? "Atención" : "Frágil";
+      }
+      const overall =
+        valueScore === "OK" && liqScore === "OK" && riskScore !== "Frágil"
+          ? "Favorable"
+          : valueScore === "Atención" && liqScore === "Atención"
+            ? "Desfavorable"
+            : "Mixto";
+      card = { valueScore, liqScore, riskScore, overall };
+    }
+    const valueScore = card.valueScore || "—";
+    const liqScore = card.liqScore || "—";
+    const riskScore = card.riskScore || "—";
+    const overall = card.overall || "—";
+    host.hidden = false;
+    host.innerHTML =
+      `<div class="score-pill"><div class="k">Valor</div><div class="v">${valueScore}</div></div>` +
+      `<div class="score-pill"><div class="k">Liquidez</div><div class="v">${liqScore}</div></div>` +
+      `<div class="score-pill"><div class="k">Riesgo MC</div><div class="v">${riskScore}</div></div>` +
+      `<div class="score-pill"><div class="k">Semáforo</div><div class="v">${overall}</div></div>`;
+    state.lastScorecard = card;
+  }
 
   function formatApiDetail(detail) {
     if (detail == null) return "";
@@ -428,9 +780,8 @@
   function goToStep(step) {
     if (!STEPS.includes(step)) return;
 
-    const needsCompany = ["decision", "liquidity", "followup", "report"].includes(step);
-    if (needsCompany && !state.companyId && step !== "report") {
-      showError("Primero crea una empresa o carga la demo.");
+    if (step !== "home" && !state.companyId) {
+      showError("Primero crea o elige una empresa. Sin empresa no puedes continuar.");
       step = "home";
     }
 
@@ -504,9 +855,15 @@
     if (step === "home") refreshHome();
     if (step === "twin") refreshTwinQuality().catch(() => {});
     if (step === "followup") updateFollowupEmpty();
-    const target = showPack ? $("sec-pack") : $(STEP_SECTIONS[step]);
-    if (target && typeof target.scrollIntoView === "function") {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    updateSidebarProgressive();
+    renderCoach();
+    // Solo hacer scroll al cambiar de pantalla, no en refrescos dentro de Seguimiento.
+    if (state._lastScrolledStep !== step) {
+      state._lastScrolledStep = step;
+      const target = showPack ? $("sec-pack") : $(STEP_SECTIONS[step]);
+      if (target && typeof target.scrollIntoView === "function") {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   }
 
@@ -532,19 +889,79 @@
     if (!btn) return;
     const ready = Boolean(state.hasReport && state.lastRun);
     btn.disabled = !ready;
+    btn.hidden = !ready;
+  }
+
+  function updateSidebarProgressive() {
+    const hasRun = Boolean(state.hasReport && state.lastRun);
+    const follow = $("nav-followup");
+    if (follow) follow.hidden = !hasRun;
+    updateNavReport();
   }
 
   function updateHomeGates() {
-    const ready = Boolean(state.companyId);
+    const hasCompany = Boolean(state.companyId);
+    const twinReady = Boolean(state.companyId && state.modelVersionId);
+    const readyBlock = $("home-ready");
     const onboard = $("home-onboard");
-    const card = $("home-company-card");
-    if (onboard) onboard.hidden = ready;
-    if (card) card.hidden = !ready;
-    for (const id of ["home-btn-decide", "home-btn-liquidity", "home-btn-followup"]) {
+    const mgmt = $("sec-companies-mgmt");
+    if (onboard) onboard.hidden = false;
+    if (mgmt) mgmt.hidden = false;
+    if (readyBlock) readyBlock.hidden = !hasCompany;
+    const title = document.querySelector("#sec-home .workspace-title");
+    const lead = document.querySelector("#sec-home .workspace-lead");
+    if (title) {
+      title.textContent = hasCompany ? "Empresas" : "Tus empresas";
+    }
+    if (lead) {
+      lead.textContent = hasCompany
+        ? "Crea otra, o usa / edita / borra las de la lista. Con empresa activa puedes continuar."
+        : "Sin empresa no puedes continuar. Crea una o elige una de la lista.";
+    }
+    for (const id of [
+      "home-btn-data",
+      "home-btn-decide",
+      "home-btn-liquidity",
+      "home-btn-followup",
+    ]) {
       const el = $(id);
       if (!el) continue;
-      el.classList.toggle("job-disabled", !ready);
-      el.setAttribute("aria-disabled", ready ? "false" : "true");
+      const needsTwin = id !== "home-btn-data";
+      const ok = needsTwin ? twinReady : hasCompany;
+      el.classList.toggle("job-disabled", !ok);
+      el.setAttribute("aria-disabled", ok ? "false" : "true");
+    }
+    updateSidebarCompanyGate();
+  }
+
+  function updateSidebarCompanyGate() {
+    const hasCompany = Boolean(state.companyId);
+    for (const id of ["nav-twin", "nav-decision", "nav-liquidity"]) {
+      const el = $(id);
+      if (!el) continue;
+      el.disabled = !hasCompany;
+      el.classList.toggle("nav-locked", !hasCompany);
+      if (!hasCompany) el.title = "Primero crea o elige una empresa";
+      else el.removeAttribute("title");
+    }
+    const follow = $("nav-followup");
+    if (follow) {
+      follow.classList.toggle("nav-locked", !hasCompany);
+      if (!hasCompany) {
+        follow.disabled = true;
+        follow.title = "Primero crea o elige una empresa";
+      } else {
+        follow.removeAttribute("title");
+      }
+    }
+    const report = $("nav-report");
+    if (report && !hasCompany) {
+      report.disabled = true;
+      report.classList.add("nav-locked");
+      report.title = "Primero crea o elige una empresa";
+    } else if (report) {
+      report.classList.remove("nav-locked");
+      report.removeAttribute("title");
     }
   }
 
@@ -552,13 +969,15 @@
     const create = $("btn-create");
     if (!create) return;
     if (state.companyId) {
-      create.textContent = "Crear otra empresa";
+      create.textContent = "Guardar como nueva empresa";
       create.classList.remove("primary");
       create.classList.add("secondary");
+      create.title = "Crea otra empresa con los datos del formulario";
     } else {
       create.textContent = "Crear empresa";
       create.classList.add("primary");
       create.classList.remove("secondary");
+      create.removeAttribute("title");
     }
   }
 
@@ -592,7 +1011,7 @@
     const el = $("context_status");
     if (!el) return;
     if (!state.companyId) {
-      el.textContent = "Sin empresa — carga demo o crea una";
+      el.textContent = "Sin empresa — crea o elige una en Inicio";
       return;
     }
     const name = $("company_name").value || state.companyName || "Empresa";
@@ -623,8 +1042,20 @@
     $("btn-load-bias").disabled = busy || !state.companyId;
     $("btn-calib-preview").disabled = busy || !state.companyId;
     $("btn-import-csv").disabled = busy || !state.companyId;
+    if ($("btn-sabi-preview")) $("btn-sabi-preview").disabled = busy || !state.companyId;
+    if ($("btn-sabi-confirm")) {
+      $("btn-sabi-confirm").disabled = busy || !state.companyId || !state.sabiDraft;
+    }
     $("btn-sensitivity").disabled =
       busy || !state.companyId || !state.lastRun || $("pack_id").value !== "new_site";
+    if ($("btn-tornado")) {
+      $("btn-tornado").disabled =
+        busy || !state.companyId || !state.lastRun || $("pack_id").value !== "new_site";
+    }
+    if ($("btn-montecarlo")) {
+      $("btn-montecarlo").disabled =
+        busy || !state.companyId || !state.lastRun || $("pack_id").value !== "new_site";
+    }
     const dl = $("btn-download-report");
     if (dl) dl.disabled = busy || !state.companyId || !state.lastRun;
     if (busy) $("btn-apply-calib").disabled = true;
@@ -645,19 +1076,35 @@
       $("btn-load-bias").disabled = !ready;
       $("btn-calib-preview").disabled = !ready;
       $("btn-import-csv").disabled = !ready;
+      if ($("btn-sabi-preview")) $("btn-sabi-preview").disabled = !ready;
+      if ($("btn-sabi-confirm")) {
+        $("btn-sabi-confirm").disabled = !ready || !state.sabiDraft;
+      }
       $("btn-sensitivity").disabled =
         !ready || !state.lastRun || $("pack_id").value !== "new_site";
+      if ($("btn-tornado")) {
+        $("btn-tornado").disabled =
+          !ready || !state.lastRun || $("pack_id").value !== "new_site";
+      }
+      if ($("btn-montecarlo")) {
+        $("btn-montecarlo").disabled =
+          !ready || !state.lastRun || $("pack_id").value !== "new_site";
+      }
       const dl = $("btn-download-report");
       if (dl) dl.disabled = !ready || !state.lastRun;
     }
     $("company_meta").textContent = ready
-      ? `Empresa lista`
-      : "Sin empresa aún. Pulsa «Cargar demo» o «Crear empresa».";
+      ? state.modelVersionId
+        ? "Empresa y twin listos"
+        : "Empresa creada — falta guardar el twin"
+      : "Sin empresa. Vuelve a Inicio y crea o elige una.";
     updateTwinSummary();
     updateContextBar();
     updateHomeGates();
     updateCreateButtonLabels();
+    updateSidebarCompanyGate();
     updateNavReport();
+    updateSidebarProgressive();
   }
 
   function clearReport() {
@@ -746,6 +1193,17 @@
     }
   }
 
+  function fmtBiasPct(value) {
+    const n = parseDecimalString(value);
+    if (n === null) return fmt(value);
+    const pct = (n * 100).toLocaleString("es-ES", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+      signDisplay: "exceptZero",
+    });
+    return `${pct} %`;
+  }
+
   function fmtCount(value) {
     const n = parseDecimalString(value);
     if (n === null) return fmt(value);
@@ -770,10 +1228,21 @@
     return fmt(value);
   }
 
+  function orgHeaders(extra) {
+    const headers = { ...(extra || {}) };
+    const token = localStorage.getItem(LS_ORG_TOKEN);
+    if (token) headers["X-Org-Token"] = token;
+    return headers;
+  }
+
   async function api(path, options = {}) {
+    const headers = orgHeaders({
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    });
     const res = await fetch(path, {
-      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
       ...options,
+      headers,
     });
     let body = null;
     const text = await res.text();
@@ -998,12 +1467,243 @@
       sel.appendChild(opt);
     }
     if (cur) sel.value = cur;
+    renderCompaniesMgmt(data.companies || []);
+  }
+
+  function renderCompaniesMgmt(companies) {
+    const tbody = $("companies-mgmt-table") && $("companies-mgmt-table").querySelector("tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    const meta = $("companies_mgmt_meta");
+    if (meta) {
+      meta.textContent = companies.length
+        ? `${companies.length} empresa(s). Pulsa Usar para entrar.`
+        : "Todavía no hay empresas. Crea una arriba.";
+    }
+    for (const c of companies) {
+      const tr = document.createElement("tr");
+      if (c.id === state.companyId) tr.className = "selected-row";
+      const tdName = document.createElement("td");
+      tdName.textContent = c.name || "";
+      if (c.id === state.companyId) {
+        const mark = document.createElement("span");
+        mark.className = "active-pill";
+        mark.textContent = " activa";
+        tdName.appendChild(mark);
+      }
+      const tdDate = document.createElement("td");
+      tdDate.textContent = (c.created_at || "").slice(0, 10);
+      const tdAct = document.createElement("td");
+      tdAct.className = "mgmt-actions";
+      const btnUse = document.createElement("button");
+      btnUse.type = "button";
+      btnUse.className = "primary";
+      btnUse.textContent = "Usar";
+      btnUse.addEventListener("click", () => {
+        useCompany(c).catch(showCaught);
+      });
+      const btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "secondary";
+      btnEdit.textContent = "Editar";
+      btnEdit.addEventListener("click", () => {
+        useCompany(c, { showChooser: true }).catch(showCaught);
+      });
+      const btnRen = document.createElement("button");
+      btnRen.type = "button";
+      btnRen.className = "secondary";
+      btnRen.textContent = "Renombrar";
+      btnRen.addEventListener("click", () => {
+        renameCompanyUi(c.id, c.name).catch(showCaught);
+      });
+      const btnDel = document.createElement("button");
+      btnDel.type = "button";
+      btnDel.className = "secondary";
+      btnDel.textContent = "Borrar";
+      btnDel.addEventListener("click", () => {
+        deleteCompanyUi(c.id, c.name).catch(showCaught);
+      });
+      tdAct.appendChild(btnUse);
+      tdAct.appendChild(btnEdit);
+      tdAct.appendChild(btnRen);
+      tdAct.appendChild(btnDel);
+      tr.appendChild(tdName);
+      tr.appendChild(tdDate);
+      tr.appendChild(tdAct);
+      tbody.appendChild(tr);
+    }
+  }
+
+  async function loadCompanyIntoState(companyId, companyName) {
+    state.companyId = companyId;
+    if (companyName) {
+      state.companyName = companyName;
+      $("company_name").value = companyName;
+      localStorage.setItem(LS_NAME, companyName);
+    }
+    localStorage.setItem(LS_COMPANY, companyId);
+    try {
+      const cur = await api(`/companies/${companyId}/snapshot`);
+      state.modelVersionId = cur.model_version_id;
+      hydrateTwin(cur.snapshot);
+      if (cur.quality) renderQuality(cur.quality);
+      await refreshDecisions().catch(() => {});
+    } catch {
+      state.modelVersionId = null;
+      clearReport();
+    }
+    await refreshCompanySelect();
+    setCompanyUi();
+    renderCoach();
+  }
+
+  async function useCompany(company, opts) {
+    showError("");
+    setBusy(true);
+    try {
+      await loadCompanyIntoState(company.id, company.name);
+      enterCompanyWorkspace({
+        showChooser: opts && opts.showChooser === true ? true : !state.modelVersionId,
+      });
+      showSuccess(
+        state.modelVersionId
+          ? `Usando «${company.name}».`
+          : `Empresa «${company.name}» lista. Elige cómo meter los datos.`,
+        null,
+        null
+      );
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+      renderCoach();
+    }
+  }
+
+  async function createCompanyShell() {
+    showError("");
+    hideStatus();
+    const nameEl = $("home_company_name");
+    const countryEl = $("home_company_country");
+    const name = ((nameEl && nameEl.value) || $("company_name").value || "").trim();
+    if (!name) throw new Error("Pon un nombre a la empresa");
+    const country = ((countryEl && countryEl.value) || $("company_country").value || "ES").trim();
+    setBusy(true);
+    showStatus("loading", "Creando empresa…");
+    try {
+      clearReport();
+      const company = await api("/companies", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          country,
+          currency: $("company_currency").value || "EUR",
+        }),
+      });
+      state.companyId = company.id;
+      state.companyName = company.name;
+      state.modelVersionId = null;
+      $("company_name").value = company.name;
+      $("company_country").value = country;
+      if (nameEl) nameEl.value = "";
+      localStorage.setItem(LS_COMPANY, company.id);
+      localStorage.setItem(LS_NAME, company.name);
+      await refreshCompanySelect();
+      setCompanyUi();
+      enterCompanyWorkspace({ showChooser: true });
+      showSuccess("Empresa creada. Ahora elige cómo meter los datos.", null, null);
+      renderCoach();
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+      renderCoach();
+    }
+  }
+
+  async function renameCompanyUi(companyId, currentName) {
+    const next = window.prompt("Nuevo nombre de la empresa", currentName || "");
+    if (next == null) return;
+    const name = String(next).trim();
+    if (!name) throw new Error("El nombre no puede estar vacío");
+    await api(`/companies/${companyId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    });
+    if (state.companyId === companyId) {
+      state.companyName = name;
+      $("company_name").value = name;
+      localStorage.setItem(LS_NAME, name);
+    }
+    await refreshCompanySelect();
+    showSuccess("Empresa renombrada.", null, null);
+  }
+
+  async function deleteCompanyUi(companyId, name) {
+    const ok = window.confirm(
+      `¿Borrar «${name || companyId}» y todos sus datos (twin, cálculos, decisiones)?`
+    );
+    if (!ok) return;
+    await api(`/companies/${companyId}`, { method: "DELETE" });
+    if (state.companyId === companyId) {
+      state.companyId = null;
+      state.modelVersionId = null;
+      state.lastRun = null;
+      state.hasReport = false;
+      localStorage.removeItem(LS_COMPANY);
+      localStorage.removeItem(LS_NAME);
+      clearReport();
+      goToStep("home");
+    }
+    await refreshCompanySelect();
+    updateHomeGates();
+    renderCoach();
+    showSuccess("Empresa borrada.", null, null);
+  }
+
+  async function deleteAllDemoCompanies() {
+    const data = await api("/companies");
+    const demos = (data.companies || []).filter((c) =>
+      /^Demo Tienda/i.test(c.name || "")
+    );
+    if (!demos.length) {
+      showSuccess("No hay empresas «Demo Tienda» que borrar.", null, null);
+      return;
+    }
+    const ok = window.confirm(`¿Borrar ${demos.length} empresa(s) Demo Tienda?`);
+    if (!ok) return;
+    setBusy(true);
+    try {
+      for (const c of demos) {
+        await api(`/companies/${c.id}`, { method: "DELETE" });
+        if (state.companyId === c.id) {
+          state.companyId = null;
+          state.modelVersionId = null;
+          state.lastRun = null;
+          state.hasReport = false;
+          localStorage.removeItem(LS_COMPANY);
+          localStorage.removeItem(LS_NAME);
+          clearReport();
+        }
+      }
+      await refreshCompanySelect();
+      updateHomeGates();
+      goToStep("home");
+      renderCoach();
+      showSuccess(`Borradas ${demos.length} demos.`, null, null);
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+    }
   }
 
   async function refreshHome() {
     const sum = $("home_company_summary");
     const last = $("home_last_run");
     updateHomeGates();
+    try {
+      await refreshCompanySelect();
+    } catch {
+      /* ignore */
+    }
     if (!state.companyId) {
       if (sum) sum.textContent = "";
       if (last) last.textContent = "";
@@ -1036,10 +1736,12 @@
     showStatus("loading", "Preparando informe…");
     const res = await fetch(`/companies/${state.companyId}/reports/executive`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: orgHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         run: state.lastRun,
         compare: state.lastCompare || null,
+        montecarlo: state.lastMonteCarlo || null,
+        scorecard: state.lastScorecard || null,
         company_name: $("company_name").value || state.companyName || "Empresa",
       }),
     });
@@ -1054,7 +1756,7 @@
     a.download = "informe_finance_twin.html";
     a.click();
     URL.revokeObjectURL(url);
-    showSuccess("Informe descargado (HTML).", null, null);
+    showSuccess("Informe / memo de decisión descargado.", null, null);
   }
 
   function syncForecastActualTable() {
@@ -1067,11 +1769,31 @@
     for (const fEl of forecasts) {
       const key = fEl.dataset.key;
       const aEl = $(`actual_a_${key}`);
+      const nice = VARIABLE_LABELS[key] || key;
       const tr = document.createElement("tr");
       for (let i = 0; i < 3; i++) tr.appendChild(document.createElement("td"));
-      tr.children[0].textContent = key;
-      tr.children[1].textContent = fEl.value || "—";
-      tr.children[2].textContent = (aEl && aEl.value) || "—";
+      tr.children[0].textContent = nice;
+      if (fEl.readOnly && fEl.value) {
+        tr.children[1].textContent = fEl.value;
+        tr.children[1].className = "forecast-cell";
+      } else {
+        // Mantener el input en #actual_items (oculto visualmente vía host) y espejo editable
+        const mirror = document.createElement("input");
+        mirror.className = "actual-input";
+        mirror.value = fEl.value || "";
+        mirror.placeholder = "Previsto";
+        mirror.addEventListener("input", () => {
+          fEl.value = mirror.value;
+        });
+        tr.children[1].appendChild(mirror);
+      }
+      if (aEl) {
+        aEl.hidden = false;
+        aEl.className = "actual-input";
+        tr.children[2].appendChild(aEl);
+      } else {
+        tr.children[2].textContent = "—";
+      }
       tbody.appendChild(tr);
     }
   }
@@ -1396,6 +2118,28 @@
       }
     }
 
+    if (run.scorecard) state.lastScorecard = run.scorecard;
+    const gotoReg = $("btn-goto-register");
+    if (gotoReg) {
+      gotoReg.textContent = isLiquidity
+        ? "Siguiente: registrar (opcional)"
+        : "Siguiente: registrar decisión";
+    }
+    const more = $("result-more-actions");
+    if (more) more.open = false;
+
+    renderTradeoff(im, fn, policyOk, isLiquidity);
+    renderRunway(fn);
+    renderDscrFromRun(run);
+    if (run.dscr && run.dscr.available && $("dscr_block")) {
+      $("dscr_block").hidden = false;
+      $("dscr_block").innerHTML =
+        `<strong>DSCR (cobertura deuda)</strong> — mínimo ${fmt(run.dscr.min_dscr)}x` +
+        (run.dscr.min_dscr_t != null ? ` en t=${fmt(run.dscr.min_dscr_t)}` : "") +
+        " (EBITDA / servicio de deuda del motor).";
+    }
+    renderScorecardFromRun(run, state.lastMonteCarlo || null);
+
     const banner = $("demo_banner");
     if (banner) {
       banner.hidden = !state.fromDemo;
@@ -1403,12 +2147,31 @@
 
     const sensBlock = $("sensitivity-block");
     if (sensBlock) sensBlock.hidden = packId !== "new_site";
+    const tornadoBlock = $("tornado-block");
+    if (tornadoBlock) tornadoBlock.hidden = packId !== "new_site";
+    const mcBlock = $("montecarlo-block");
+    if (mcBlock) mcBlock.hidden = packId !== "new_site";
     const sensBtn = $("btn-sensitivity");
     if (sensBtn && packId !== "new_site") sensBtn.disabled = true;
+    const tornadoBtn = $("btn-tornado");
+    if (tornadoBtn) tornadoBtn.disabled = packId !== "new_site" || state.busy || !state.companyId;
+    const mcBtn = $("btn-montecarlo");
+    if (mcBtn) mcBtn.disabled = packId !== "new_site" || state.busy || !state.companyId;
+    if (sensBlock && packId === "new_site" && !state.lastSensitivity) {
+      sensBlock.open = false;
+      if ($("sensitivity_hint")) {
+        $("sensitivity_hint").textContent =
+          "Recomendado: pulsa «¿Qué tendría que pasar?» para ver umbrales y stress.";
+      }
+    }
 
     const compareBlock = $("detail-compare");
     if (compareBlock) {
       compareBlock.open = Boolean(state.lastCompare);
+      if (!state.lastCompare && $("compare_hint")) {
+        $("compare_hint").textContent =
+          "Siguiente paso habitual: Comparar 3 escenarios (base / conservador / adverso).";
+      }
     }
 
     renderCompare(state.lastCompare);
@@ -1471,7 +2234,9 @@
     $("run_meta").textContent = `Escenario ${variantLabel} listo`;
     setCompanyUi();
     updateNavReport();
+    updateSidebarProgressive();
     goToStep("report");
+    renderCoach();
   }
 
   async function restoreSession() {
@@ -1486,18 +2251,14 @@
     renderPackCards($("pack_id").value === "liquidity_plan");
     if (!savedId) {
       state.companyId = null;
+      state.modelVersionId = null;
       setCompanyUi();
       goToStep("home");
       return;
     }
     try {
-      const cur = await api(`/companies/${savedId}/snapshot`);
-      state.companyId = savedId;
-      state.modelVersionId = cur.model_version_id;
-      hydrateTwin(cur.snapshot);
-      if (cur.quality) renderQuality(cur.quality);
-      setCompanyUi();
-      await refreshDecisions();
+      await loadCompanyIntoState(savedId, savedName || undefined);
+      // Al recargar: quedamos en Inicio (lista) para elegir; Usar entra al workspace.
       goToStep("home");
     } catch {
       localStorage.removeItem(LS_COMPANY);
@@ -1538,12 +2299,14 @@
       showSuccess(
         "Empresa y twin guardados.",
         "twin_next",
-        "Siguiente: elige la decisión que quieres simular."
+        "Siguiente: elige Liquidez o Decidir y rellena tú las cifras."
       );
-      goToStep("decision");
+      enterCompanyWorkspace({ showChooser: false });
+      renderCoach();
     } finally {
       setBusy(false);
       setCompanyUi();
+      renderCoach();
     }
   }
 
@@ -1567,41 +2330,39 @@
     setBusy(true);
     showStatus("loading", "Preparando la demo…");
     try {
-      const company = await api("/companies", {
-        method: "POST",
-        body: JSON.stringify({
-          name: $("company_name").value,
-          country: $("company_country").value,
-          currency: $("company_currency").value,
-        }),
-      });
+      const boot = await api("/demo/bootstrap", { method: "POST", body: "{}" });
+      const company = boot.company;
       state.companyId = company.id;
       state.companyName = company.name;
+      $("company_name").value = company.name;
       localStorage.setItem(LS_COMPANY, company.id);
       localStorage.setItem(LS_NAME, company.name);
-      const snap = twinSnapshot();
-      const put = await api(`/companies/${state.companyId}/snapshot`, {
-        method: "PUT",
-        body: JSON.stringify({ snapshot: snap, label: "demo-p8" }),
-      });
-      state.modelVersionId = put.model_version_id;
-      hydrateTwin(snap);
+      state.modelVersionId = boot.model_version_id;
+      hydrateTwin(boot.snapshot);
+      if (boot.inputs) {
+        for (const [key, value] of Object.entries(boot.inputs)) {
+          const el = $(fieldInputId(key));
+          if (el) el.value = String(value);
+        }
+      }
       await refreshCompanySelect();
-      showStatus("loading", "Calculando el escenario de la tienda…");
-      const run = await postPackRun("new_site", collectPackInputs("new_site"), "base");
       state.fromDemo = true;
-      renderReport(run, null);
+      state.intentMode = "demo";
+      state.coachDismissed = false;
+      localStorage.removeItem(LS_COACH_DONE);
+      renderReport(boot.run, null);
       $("demo_meta").textContent = "Demo lista.";
       const banner = $("demo_banner");
       if (banner) {
         banner.hidden = false;
         if ($("demo_banner_text")) {
           $("demo_banner_text").textContent =
-            "Aperturaste una tienda de ejemplo. Siguiente: registrar la decisión o ajustar hipótesis.";
+            "Demo lista. Lee VAN y caja; luego registra o ajusta.";
         }
       }
       showSuccess("Demo lista: ya estás viendo el resultado.", null, null);
       setCompanyUi();
+      renderCoach();
     } catch (e) {
       state.fromDemo = false;
       $("demo_meta").textContent = "";
@@ -1609,6 +2370,7 @@
     } finally {
       setBusy(false);
       setCompanyUi();
+      renderCoach();
     }
   }
 
@@ -1624,10 +2386,12 @@
       });
       state.modelVersionId = put.model_version_id;
       setCompanyUi();
-      showSuccess("Twin actualizado.", "twin_next", "Puedes continuar a la decisión.");
+      showSuccess("Twin actualizado.", "twin_next", "Siguiente: Liquidez o Decidir.");
+      renderCoach();
     } finally {
       setBusy(false);
       setCompanyUi();
+      renderCoach();
     }
   }
 
@@ -1645,6 +2409,7 @@
       if (label) form.append("label", label);
       const res = await fetch(`/companies/${state.companyId}/imports/twin-csv`, {
         method: "POST",
+        headers: orgHeaders({}),
         body: form,
       });
       const text = await res.text();
@@ -1706,7 +2471,9 @@
     setBusy(true);
     showStatus("loading", "Calculando tu escenario…");
     try {
-      const run = await postPackRun(packId, collectPackInputs(packId), $("variant").value);
+      const inputs = collectPackInputs(packId);
+      state.lastPackInputs = inputs;
+      const run = await postPackRun(packId, inputs, $("variant").value);
       renderReport(run, null);
       showSuccess(
         "Cálculo listo.",
@@ -1731,6 +2498,7 @@
     if (!PACK_FORMS[packId]) throw new Error(`pack no soportado: ${packId}`);
     validatePackInputs(packId);
     const inputs = collectPackInputs(packId);
+    state.lastPackInputs = inputs;
     setBusy(true);
     showStatus("loading", "Comparando los 3 escenarios…");
     try {
@@ -1755,49 +2523,80 @@
     return Array.isArray(xs) ? xs.slice() : [];
   }
 
-  function renderActualFields(keys) {
-    const host = $("actual_items");
-    host.innerHTML = "";
-    const packInputs = (() => {
+  function fallbackForecastHints() {
+    const packInputs = state.lastPackInputs || (() => {
       try {
         return collectPackInputs($("pack_id").value);
       } catch {
         return {};
       }
     })();
-    // Defaults de forecast solo copian inputs del formulario (no calculados).
-    const forecastHints = {
-      sales_monthly: packInputs.sales_run_rate,
-      gross_margin_pct: packInputs.gross_margin_pct,
-      capex_total: packInputs.capex_total,
-      rent_monthly: packInputs.rent_monthly,
+    const fn = (state.lastRun && state.lastRun.financing_need) || {};
+    return {
+      sales_monthly:
+        packInputs.sales_run_rate ||
+        packInputs.expected_monthly_revenue_uplift ||
+        packInputs.revenue_uplift_monthly ||
+        packInputs.benefit_amount ||
+        "",
+      gross_margin_pct: packInputs.gross_margin_pct || "",
+      capex_total:
+        packInputs.capex_total ||
+        packInputs.acquisition_cost ||
+        packInputs.linked_capex ||
+        "",
+      rent_monthly: packInputs.rent_monthly || "",
       headcount: packInputs.headcount != null ? String(packInputs.headcount) : "",
-      min_cash: $("min_cash").value,
+      payroll_monthly:
+        packInputs.headcount != null && packInputs.employer_cost_per_person != null
+          ? String(Number(packInputs.headcount) * Number(packInputs.employer_cost_per_person))
+          : "",
+      min_cash: fn.min_cash != null ? String(fn.min_cash) : $("min_cash").value || "",
     };
+  }
+
+  function renderActualFields(keys, forecastByKey) {
+    const host = $("actual_items");
+    host.innerHTML = "";
+    const forecasts = Object.assign({}, fallbackForecastHints(), forecastByKey || {});
+    state.lastForecastByKey = forecasts;
+    let filled = 0;
     for (const key of keys) {
       const wrap = document.createElement("div");
       wrap.className = "actual-key";
-      const nice = VARIABLE_LABELS[key] || key;
-      const labF = document.createElement("label");
-      labF.textContent = `${nice} previsto `;
       const inF = document.createElement("input");
       inF.id = `actual_f_${key}`;
       inF.dataset.key = key;
       inF.dataset.role = "forecast";
-      if (forecastHints[key] != null && forecastHints[key] !== "") {
-        inF.value = String(forecastHints[key]);
+      inF.readOnly = true;
+      inF.tabIndex = -1;
+      if (forecasts[key] != null && forecasts[key] !== "") {
+        inF.value = String(forecasts[key]);
+        filled += 1;
+      } else {
+        // Decisiones antiguas sin freeze: permitir editar previsto
+        inF.readOnly = false;
+        inF.tabIndex = 0;
+        inF.placeholder = "Previsto";
       }
-      labF.appendChild(inF);
-      const labA = document.createElement("label");
-      labA.textContent = `${nice} real `;
       const inA = document.createElement("input");
       inA.id = `actual_a_${key}`;
       inA.dataset.key = key;
       inA.dataset.role = "actual";
-      labA.appendChild(inA);
-      wrap.appendChild(labF);
-      wrap.appendChild(labA);
+      inA.placeholder = "Escribe el real";
+      wrap.appendChild(inF);
+      wrap.appendChild(inA);
       host.appendChild(wrap);
+    }
+    const howto = $("actuals_howto");
+    if (howto) howto.hidden = false;
+    const empty = $("actuals_empty");
+    if (empty) empty.hidden = true;
+    const hint = $("follow_review_hint");
+    if (hint) {
+      hint.textContent = filled
+        ? `Previsto rellenado automáticamente (${filled} indicador(es)). Solo escribe la columna Real.`
+        : "Esta decisión no tenía previsto congelado. Rellena Previsto + Real, o vuelve a Registrar tras calcular.";
     }
     syncForecastActualTable();
   }
@@ -1830,14 +2629,24 @@
     setBusy(true);
     showStatus("loading", "Registrando la decisión…");
     try {
+      const packId = state.lastRun.pack_id || $("pack_id").value;
+      let packInputs = state.lastPackInputs;
+      if (!packInputs) {
+        try {
+          packInputs = collectPackInputs(packId);
+        } catch {
+          packInputs = state.lastRun.resolved_inputs || {};
+        }
+      }
       const body = {
         title: $("dec_title").value,
-        decision_pack_id: state.lastRun.pack_id || $("pack_id").value,
+        decision_pack_id: packId,
         decision_date: $("dec_date").value,
         calculation_run_id: state.lastRun.calculation_run_id,
         status: $("dec_status").value,
         rationale: $("dec_rationale").value,
         owner_user_id: "local",
+        pack_inputs: packInputs,
       };
       const dec = await api(`/companies/${state.companyId}/decisions`, {
         method: "POST",
@@ -1845,23 +2654,39 @@
       });
       state.selectedDecisionId = dec.id;
       $("decision_meta").textContent =
-        `Decisión #${dec.number} guardada · ${dec.status}`;
+        `Decisión #${dec.number} guardada · ${dec.status} · previsto congelado`;
       await refreshDecisions();
       $("actual_decision_id").value = dec.id;
-      const keys = list(state.lastRun.actual_keys);
-      renderActualFields(keys.length ? keys : ["sales_monthly", "min_cash"]);
+      const keys = list(dec.actual_keys || state.lastRun.actual_keys);
+      renderActualFields(
+        keys.length ? keys : ["sales_monthly", "min_cash"],
+        dec.forecast_by_key || {}
+      );
+      if ($("actual_period") && $("dec_date").value) {
+        const d = $("dec_date").value.slice(0, 7);
+        if (/^\d{4}-\d{2}$/.test(d)) $("actual_period").value = d;
+      }
       const actuals = $("actuals-block");
       if (actuals) actuals.open = true;
       setFollowStep(2);
       showSuccess(
-        "Decisión registrada.",
+        "Decisión registrada. El previsto ya está cargado.",
         "follow_next",
-        "Siguiente: anota lo que ocurrió de verdad."
+        "Siguiente: escribe solo la columna Real del mes."
       );
       goToStep("followup");
+      renderCoach();
+      const fb = $("actuals_feedback");
+      if (fb) {
+        showActualsFeedback(
+          "Previsto cargado desde tu simulación. Rellena Real y pulsa Guardar.",
+          false
+        );
+      }
     } finally {
       setBusy(false);
       setCompanyUi();
+      renderCoach();
     }
   }
 
@@ -1910,15 +2735,25 @@
       (packId ? ` · ${packTitle(packId)}` : "") +
       (status ? ` · ${status}` : "");
     const detail = await api(`/decisions/${decisionId}`);
-    const keys =
-      (state.lastRun &&
-        state.lastRun.pack_id === detail.decision_pack_id &&
-        state.lastRun.actual_keys) ||
-      (detail.actual_results || []).map((a) => a.variable_key);
-    const uniq = [...new Set(keys.length ? keys : ["sales_monthly", "min_cash"])];
-    renderActualFields(uniq);
-    const empty = $("actuals_empty");
-    if (empty) empty.hidden = true;
+    const fromDetail = list(detail.actual_keys);
+    const fromResults = (detail.actual_results || []).map((a) => a.variable_key);
+    const fromRun =
+      state.lastRun && state.lastRun.pack_id === detail.decision_pack_id
+        ? list(state.lastRun.actual_keys)
+        : [];
+    const base = fromDetail.length
+      ? fromDetail
+      : fromRun.length
+        ? fromRun
+        : fromResults;
+    const keys = [...new Set(base.length ? base : ["sales_monthly", "min_cash"])];
+    renderActualFields(keys, detail.forecast_by_key || {});
+    if (detail.decision_date && $("actual_period")) {
+      const ym = String(detail.decision_date).slice(0, 7);
+      if (/^\d{4}-\d{2}$/.test(ym) && !$("actual_period").dataset.touched) {
+        $("actual_period").value = ym;
+      }
+    }
     setFollowStep(2);
     await refreshDecisions();
     setCompanyUi();
@@ -1941,18 +2776,37 @@
     }
   }
 
+  function showActualsFeedback(text, isWarn) {
+    const fb = $("actuals_feedback");
+    if (!fb) return;
+    fb.hidden = false;
+    fb.classList.toggle("warn-fb", Boolean(isWarn));
+    fb.textContent = text;
+    if (typeof fb.scrollIntoView === "function") {
+      fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
   async function recordActuals() {
     showError("");
+    const fb = $("actuals_feedback");
+    if (fb) fb.hidden = true;
     const decisionId = $("actual_decision_id").value || state.selectedDecisionId;
     if (!decisionId) throw new Error("Selecciona una decisión");
     const items = collectActualItems();
-    if (!items.length) throw new Error("Rellena al menos un par previsto/real");
+    if (!items.length) {
+      throw new Error(
+        "Escribe al menos un valor en la columna Real (el previsto debe venir de la simulación)"
+      );
+    }
+    const period = $("actual_period").value;
     setBusy(true);
+    showStatus("loading", "Guardando valores reales…");
     try {
       const out = await api(`/decisions/${decisionId}/actuals`, {
         method: "POST",
         body: JSON.stringify({
-          period_year_month: $("actual_period").value,
+          period_year_month: period,
           items,
           source: "manual",
         }),
@@ -1968,17 +2822,92 @@
       );
       state.selectedDecisionId = decisionId;
       await refreshDecisions();
-      await loadBiasProfiles({ manageBusy: false });
+      if ($("actual_decision_id")) $("actual_decision_id").value = decisionId;
+      const n = Array.isArray(out.recorded) ? out.recorded.length : items.length;
+      const warnN = (out.warnings && out.warnings.length) || 0;
+      showActualsFeedback(
+        warnN
+          ? `Guardado periodo ${period} (${n} variable(s)). Hay avisos: mira detalle técnico.`
+          : `Registrado — periodo ${period}, ${n} variable(s). Cambie el periodo para otro mes, o ejecute «Calcular perfil de sesgo».`,
+        Boolean(warnN)
+      );
+      setFollowStep(2);
+      showSuccess(`Valores reales guardados (${period}).`, null, null);
+      // No saltar a sesgos ni al inicio: el usuario sigue anotando meses aquí.
     } finally {
       setBusy(false);
       setCompanyUi();
     }
   }
 
+  async function resolveFollowPackId() {
+    const fromSelect = $("pack_id") && $("pack_id").value;
+    if (state.selectedDecisionId) {
+      try {
+        const detail = await api(`/decisions/${state.selectedDecisionId}`);
+        if (detail && detail.decision_pack_id) return detail.decision_pack_id;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (state.lastRun && state.lastRun.pack_id) return state.lastRun.pack_id;
+    return fromSelect || "new_site";
+  }
+
+  async function resolveCalibInputs(packId) {
+    if (state.lastPackInputs && Object.keys(state.lastPackInputs).length) {
+      return Object.assign({}, state.lastPackInputs);
+    }
+    if (state.lastRun && state.lastRun.resolved_inputs) {
+      return Object.assign({}, state.lastRun.resolved_inputs);
+    }
+    if (state.selectedDecisionId) {
+      try {
+        const detail = await api(`/decisions/${state.selectedDecisionId}`);
+        const frozen = (detail && detail.frozen_projection) || {};
+        if (frozen.pack_inputs && Object.keys(frozen.pack_inputs).length) {
+          return Object.assign({}, frozen.pack_inputs);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    if ($("pack_id").value !== packId) {
+      $("pack_id").value = packId;
+      localStorage.setItem(LS_PACK, packId);
+      renderPackForm(packId);
+      renderPackCards(packId === "liquidity_plan");
+    }
+    return collectPackInputs(packId);
+  }
+
+  function renderCalibCompare(before, after, appliedKeys) {
+    const tbody = $("calib-compare-table") && $("calib-compare-table").querySelector("tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    const keys = appliedKeys && appliedKeys.length
+      ? appliedKeys
+      : Object.keys(after || {});
+    for (const key of keys) {
+      const tr = document.createElement("tr");
+      for (let i = 0; i < 3; i++) tr.appendChild(document.createElement("td"));
+      tr.children[0].textContent = key;
+      tr.children[1].textContent =
+        before && before[key] != null ? String(before[key]) : "—";
+      tr.children[2].textContent =
+        after && after[key] != null ? String(after[key]) : "—";
+      tbody.appendChild(tr);
+    }
+  }
+
   async function loadBiasProfiles(opts) {
     showError("");
     if (!state.companyId) throw new Error("Crea una empresa primero");
-    const packId = $("pack_id").value;
+    const packId = await resolveFollowPackId();
+    if ($("pack_id") && $("pack_id").value !== packId) {
+      $("pack_id").value = packId;
+      localStorage.setItem(LS_PACK, packId);
+    }
     const manageBusy = !opts || opts.manageBusy !== false;
     if (manageBusy) setBusy(true);
     try {
@@ -1994,15 +2923,41 @@
         const c = tr.children;
         c[0].textContent = VARIABLE_LABELS[p.variable_key] || p.variable_key || "";
         c[1].textContent = String(p.n_observations ?? "");
-        c[2].textContent = fmt(p.median_bias);
-        c[3].textContent = p.direction ?? "";
+        c[2].textContent = fmtBiasPct(p.median_bias);
+        c[3].textContent =
+          DIRECTION_LABELS[p.direction] || p.direction || "";
         c[4].textContent = p.confidence ?? "";
         tbody.appendChild(tr);
       }
       const ready = profiles.some((p) => Number(p.n_observations) >= 3);
       $("bias_meta").textContent = ready
-        ? `${profiles.length} perfiles · hay datos suficientes para ofrecer calibración`
-        : `${profiles.length} perfiles · hacen falta al menos 3 datos reales por variable`;
+        ? `${profiles.length} indicadores · con ≥3 periodos puede previsualizar calibración`
+        : `${profiles.length} indicadores · se requieren ≥3 periodos con previsto vs real`;
+      const human = $("bias_human");
+      if (human) {
+        if (!profiles.length) {
+          human.hidden = true;
+        } else {
+          human.hidden = false;
+          const top = profiles.slice().sort(
+            (a, b) => Number(b.n_observations || 0) - Number(a.n_observations || 0)
+          )[0];
+          const dir =
+            DIRECTION_LABELS[top.direction] ||
+            top.direction ||
+            "Sin patrón claro todavía";
+          const n = top.n_observations || 0;
+          human.className = "tradeoff-box ok";
+          human.innerHTML =
+            `<strong>Lectura:</strong> En «${VARIABLE_LABELS[top.variable_key] || top.variable_key}» ` +
+            `${dir}. <strong>Sesgo típico (mediana)</strong>: ${fmtBiasPct(top.median_bias)} ` +
+            `sobre ${n} periodo(s).<br>` +
+            `<span class="hint">Fórmula: (previsto − real) / previsto. ` +
+            `Ej. −5,7 % = el real salió ~5,7 % por encima del previsto (subestimaste). ` +
+            `+10 % = el real quedó por debajo (sobreestimaste).</span>`;
+        }
+      }
+      setFollowStep(3);
     } finally {
       if (manageBusy) {
         setBusy(false);
@@ -2014,42 +2969,407 @@
   async function previewCalibration() {
     showError("");
     if (!state.companyId) throw new Error("Crea una empresa primero");
-    const packId = $("pack_id").value;
-    const inputs = collectPackInputs(packId);
+    const packId = await resolveFollowPackId();
+    const inputs = await resolveCalibInputs(packId);
+    if (!inputs || !Object.keys(inputs).length) {
+      throw new Error(
+        "No hay hipótesis de la simulación para calibrar. Vuelve a calcular (demo o Decidir) y registra de nuevo."
+      );
+    }
     setBusy(true);
+    showStatus("loading", "Calculando calibración…");
+    const panel = $("calib_panel");
+    const fb = $("calib_feedback");
+    const next = $("calib_next");
+    const applyBtn = $("btn-apply-calib");
     try {
+      if ($("pack_id").value !== packId) {
+        $("pack_id").value = packId;
+        localStorage.setItem(LS_PACK, packId);
+        renderPackForm(packId);
+        renderPackCards(packId === "liquidity_plan");
+      }
       const out = await api(
         `/companies/${state.companyId}/packs/${packId}/calibration/preview`,
         { method: "POST", body: JSON.stringify({ inputs }) }
       );
-      state.lastCalib = out.offered ? out.calibrated_inputs : null;
       $("calib_out").textContent = JSON.stringify(out, null, 2);
-      const applyBtn = $("btn-apply-calib");
+      if (panel) panel.hidden = false;
+
+      const applied = out.applied || [];
+      const appliedKeys = applied
+        .map((a) => a.input_key || a.variable_key)
+        .filter(Boolean);
+
       if (out.offered === true && out.calibrated_inputs) {
-        applyBtn.hidden = false;
-        applyBtn.disabled = false;
+        state.lastCalib = out.calibrated_inputs;
+        state.lastCalibPackId = packId;
+        if (applyBtn) {
+          applyBtn.hidden = false;
+          applyBtn.disabled = false;
+        }
+        renderCalibCompare(inputs, out.calibrated_inputs, appliedKeys);
+        if (fb) {
+          fb.hidden = false;
+          fb.classList.remove("warn-fb");
+          fb.textContent =
+            `Calibración lista para «${packTitle(packId)}»: ` +
+            `${applied.length || Object.keys(out.calibrated_inputs).length} hipótesis ajustadas según tu sesgo.`;
+        }
+        if (next) {
+          next.hidden = false;
+          next.textContent =
+            "Pulse «Aplicar calibración» para volcar las cifras al formulario de decisión y recalcular.";
+        }
+        showSuccess("Calibración lista. Revisa la tabla y aplica si te encaja.", null, null);
       } else {
-        applyBtn.hidden = true;
-        applyBtn.disabled = true;
         state.lastCalib = null;
+        state.lastCalibPackId = null;
+        if (applyBtn) {
+          applyBtn.hidden = true;
+          applyBtn.disabled = true;
+        }
+        renderCalibCompare(inputs, {}, []);
+        const reason = out.reason || "aún no hay suficientes observaciones mapeables";
+        if (fb) {
+          fb.hidden = false;
+          fb.classList.add("warn-fb");
+          fb.textContent = `No se ofrece calibración todavía: ${reason}`;
+        }
+        if (next) {
+          next.hidden = false;
+          next.textContent =
+            "Sigue anotando reales (n≥3 en variables con mapeo, p. ej. ventas) o usa el pack new_site de la demo.";
+        }
+        showSuccess("Sesgo visto, pero aún no hay calibración aplicable.", null, null);
       }
+      const block = $("bias-block");
+      if (block) block.open = true;
+      if (panel && typeof panel.scrollIntoView === "function") {
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      setFollowStep(3);
     } finally {
       setBusy(false);
       setCompanyUi();
+      // setCompanyUi no debe ocultar el CTA si ya hay calibración
+      if (state.lastCalib && applyBtn) {
+        applyBtn.hidden = false;
+        applyBtn.disabled = false;
+      }
     }
   }
 
   function applyCalibratedInputs() {
     showError("");
     if (!state.lastCalib) throw new Error("No hay inputs calibrados (la API no ofreció calibración)");
-    const packId = $("pack_id").value;
+    const packId = state.lastCalibPackId || $("pack_id").value || "new_site";
+    state.liquidityMode = false;
+    $("pack_id").value = packId;
+    localStorage.setItem(LS_PACK, packId);
+    renderPackForm(packId);
+    renderPackCards(false);
     for (const [key, value] of Object.entries(state.lastCalib)) {
       const el = $(fieldInputId(key));
       if (el) el.value = String(value);
     }
-    $("run_meta").textContent =
-      `Inputs calibrados aplicados (${packId}); vuelve a calcular para ver el impacto del motor`;
+    state.lastPackInputs = Object.assign(
+      {},
+      state.lastPackInputs || {},
+      state.lastCalib
+    );
+    if ($("run_meta")) {
+      $("run_meta").textContent =
+        `Hipótesis calibradas aplicadas (${packTitle(packId)}). Pulsa Calcular.`;
+    }
     goToStep("decision");
+    setWizardStep(2);
+    showSuccess(
+      "Hipótesis calibradas aplicadas al formulario.",
+      null,
+      null
+    );
+    const hint = $("pack_hint");
+    if (hint) {
+      hint.textContent =
+        "Cifras ya ajustadas por tu sesgo. Revisa y pulsa Calcular para ver el nuevo resultado.";
+    }
+  }
+
+  async function runTornado() {
+    showError("");
+    hideStatus();
+    if (!state.companyId) throw new Error("Crea una empresa primero");
+    const packId = $("pack_id").value;
+    if (packId !== "new_site") throw new Error("Tornado disponible en nuevo establecimiento");
+    validatePackInputs(packId);
+    const inputs = collectPackInputs(packId);
+    setBusy(true);
+    showStatus("loading", "Calculando tornado…");
+    try {
+      const out = await api(`/companies/${state.companyId}/packs/${packId}/tornado`, {
+        method: "POST",
+        body: JSON.stringify({
+          inputs,
+          variant: $("variant").value,
+          metric: "npv",
+        }),
+      });
+      state.lastTornado = out;
+      const host = $("tornado_tables");
+      const block = $("tornado-block");
+      if (block) {
+        block.hidden = false;
+        block.open = true;
+      }
+      if (host) {
+        host.innerHTML = "";
+        const wrap = document.createElement("div");
+        wrap.className = "table-wrap";
+        const table = document.createElement("table");
+        table.innerHTML =
+          "<thead><tr><th>Variable</th><th>Impacto en VAN</th><th>Con −Δ</th><th>Con +Δ</th></tr></thead>";
+        const tbody = document.createElement("tbody");
+        for (const bar of out.bars || []) {
+          if (bar.skipped) continue;
+          const tr = document.createElement("tr");
+          tr.innerHTML =
+            `<td>${bar.variable}</td>` +
+            `<td>${fmtMoney(bar.impact_span)}</td>` +
+            `<td>${fmtMoney(bar.metric_at_low)}</td>` +
+            `<td>${fmtMoney(bar.metric_at_high)}</td>`;
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        host.appendChild(wrap);
+      }
+      if ($("tornado_hint")) {
+        $("tornado_hint").textContent =
+          "Ordenado por impacto (span ±10%). El motor recalcula cada barra.";
+      }
+      showSuccess("Tornado listo.", null, null);
+      goToStep("report");
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+    }
+  }
+
+  async function runMonteCarlo() {
+    showError("");
+    hideStatus();
+    if (!state.companyId) throw new Error("Crea una empresa primero");
+    const packId = $("pack_id").value;
+    if (packId !== "new_site") throw new Error("Monte Carlo disponible en nuevo establecimiento");
+    validatePackInputs(packId);
+    const inputs = collectPackInputs(packId);
+    setBusy(true);
+    showStatus("loading", "Simulando Monte Carlo…");
+    try {
+      const out = await api(`/companies/${state.companyId}/packs/${packId}/montecarlo`, {
+        method: "POST",
+        body: JSON.stringify({
+          inputs,
+          variant: $("variant").value,
+          n_sims: 80,
+          seed: 42,
+        }),
+      });
+      state.lastMonteCarlo = out;
+      const block = $("montecarlo-block");
+      if (block) {
+        block.hidden = false;
+        block.open = true;
+      }
+      const host = $("montecarlo_out");
+      if (host) {
+        host.innerHTML =
+          `<p>${out.disclaimer || ""}</p>` +
+          `<p>Sims: ${out.n_completed}/${out.n_sims} · ` +
+          `VAN P10 ${fmtMoney(out.npv_p10)} · P50 ${fmtMoney(out.npv_p50)} · P90 ${fmtMoney(out.npv_p90)}</p>` +
+          `<p>% sims con VAN&gt;0: ${out.prob_npv_positive != null ? (Number(out.prob_npv_positive) * 100).toFixed(1) + "%" : "—"} · ` +
+          `% sims que rompen caja mínima: ${out.prob_cash_breach != null ? (Number(out.prob_cash_breach) * 100).toFixed(1) + "%" : "—"}</p>`;
+      }
+      if (state.lastRun) renderScorecardFromRun(state.lastRun, out);
+      showSuccess("Monte Carlo listo (bajo tus rangos).", null, null);
+      goToStep("report");
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+    }
+  }
+
+  async function previewSabi() {
+    showError("");
+    if (!state.companyId) throw new Error("Crea una empresa primero");
+    const input = $("sabi_file");
+    if (!input || !input.files || !input.files[0]) {
+      throw new Error("Elige un archivo Excel o CSV SABI");
+    }
+    setBusy(true);
+    showStatus("loading", "Leyendo SABI…");
+    try {
+      const fd = new FormData();
+      fd.append("file", input.files[0]);
+      fd.append("year_month", ($("sabi_year_month") && $("sabi_year_month").value) || "2025-01");
+      const res = await fetch(`/companies/${state.companyId}/imports/sabi-preview`, {
+        method: "POST",
+        headers: orgHeaders({}),
+        body: fd,
+      });
+      const text = await res.text();
+      let body;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = text;
+      }
+      if (!res.ok) {
+        throw new Error(
+          typeof body === "object" && body && body.detail
+            ? formatApiDetail(body.detail)
+            : text || res.statusText
+        );
+      }
+      state.sabiDraft = body;
+      const host = $("sabi_preview");
+      if (host) {
+        host.hidden = false;
+        const d = body.derived || {};
+        host.innerHTML =
+          `<p><strong>Borrador:</strong> ${body.company_name_hint || "Empresa"} · ` +
+          `caja ${fmtMoney(d.opening_cash)} · ingresos/mes ${fmtMoney(d.revenue_monthly)} · ` +
+          `costes/mes ${fmtMoney(d.costs_monthly)}` +
+          (d.bank_debt_hint ? ` · deuda bancaria (hint) ${fmtMoney(d.bank_debt_hint)}` : "") +
+          `</p><p class="hint">Revisa el mapeo y confirma para guardar el twin.</p>` +
+          `<ul>` +
+          (body.mapping || [])
+            .slice(0, 12)
+            .map((m) => `<li>${m.source_label} → ${m.maps_to} (${m.raw_value})</li>`)
+            .join("") +
+          `</ul>`;
+      }
+      $("import_meta").textContent = "Preview SABI listo — confirma para aplicar.";
+      $("import_out").textContent = JSON.stringify(
+        { derived: body.derived, notes: body.notes },
+        null,
+        2
+      );
+      setSabiStep(2);
+      showSuccess("Paso 2: revisa el mapeo. Si cuadra, confirma.", null, null);
+      renderCoach();
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+    }
+  }
+
+  async function confirmSabi() {
+    showError("");
+    if (!state.companyId) throw new Error("Crea una empresa primero");
+    if (!state.sabiDraft || !state.sabiDraft.snapshot) {
+      throw new Error("Primero previsualiza el Excel/CSV SABI");
+    }
+    setBusy(true);
+    showStatus("loading", "Guardando twin desde SABI…");
+    try {
+      const out = await api(`/companies/${state.companyId}/imports/sabi-confirm`, {
+        method: "POST",
+        body: JSON.stringify({
+          snapshot: state.sabiDraft.snapshot,
+          label: "sabi-import",
+          company_name: state.sabiDraft.company_name_hint,
+        }),
+      });
+      state.modelVersionId = out.model_version_id;
+      const snap = out.snapshot || state.sabiDraft.snapshot;
+      if (snap.company) {
+        $("opening_cash").value = snap.company.opening_cash || $("opening_cash").value;
+      }
+      if (snap.policies) {
+        $("min_cash").value = snap.policies.min_cash || $("min_cash").value;
+      }
+      if (state.sabiDraft.company_name_hint) {
+        $("company_name").value = state.sabiDraft.company_name_hint;
+        state.companyName = state.sabiDraft.company_name_hint;
+        localStorage.setItem(LS_NAME, state.companyName);
+      }
+      state.draftRevenues = snap.revenue_streams || [];
+      state.draftCosts = snap.cost_items || [];
+      renderStreamTables();
+      $("import_meta").textContent = `Twin SABI guardado · ${out.model_version_id}`;
+      state.sabiDraft = null;
+      if ($("sabi_preview")) $("sabi_preview").hidden = true;
+      setSabiStep(3);
+      await refreshTwinQuality();
+      showSuccess(
+        "Twin importado. Ahora elige qué quieres simular y decide tú las cifras.",
+        "twin_next",
+        "Siguiente: Liquidez o Decidir (sin presets)."
+      );
+      goToStep("home");
+      renderCoach();
+    } finally {
+      setBusy(false);
+      setCompanyUi();
+      renderCoach();
+    }
+  }
+
+  async function ensureCompanyForIntent(preferredName) {
+    if (state.companyId) return state.companyId;
+    const name = preferredName || $("company_name").value || "Mi empresa";
+    $("company_name").value = name;
+    const company = await api("/companies", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        country: $("company_country").value || "ES",
+        currency: $("company_currency").value || "EUR",
+      }),
+    });
+    state.companyId = company.id;
+    state.companyName = company.name;
+    localStorage.setItem(LS_COMPANY, company.id);
+    localStorage.setItem(LS_NAME, company.name);
+    await refreshCompanySelect();
+    setCompanyUi();
+    return company.id;
+  }
+
+  async function startIntentSabi() {
+    showError("");
+    if (!state.companyId) {
+      goToStep("home");
+      showError("Primero crea o elige una empresa.");
+      return;
+    }
+    openTwinForIntent("sabi");
+    showSuccess("Sube el Excel SABI y previsualiza el mapeo.", null, null);
+  }
+
+  function startIntentManual() {
+    showError("");
+    if (!state.companyId) {
+      goToStep("home");
+      showError("Primero crea o elige una empresa.");
+      return;
+    }
+    openTwinForIntent("manual");
+    showDataPath("manual");
+    showSuccess("Rellena caja e ingresos y pulsa Guardar twin.", null, null);
+  }
+
+  function startIntentCsv() {
+    showError("");
+    if (!state.companyId) {
+      goToStep("home");
+      showError("Primero crea o elige una empresa.");
+      return;
+    }
+    openTwinForIntent("manual");
+    showDataPath("csv");
   }
 
   async function runSensitivity() {
@@ -2183,11 +3503,21 @@
     el.addEventListener("click", () => {
       showError("");
       const dest = el.getAttribute("data-goto");
+      if (!state.companyId && dest !== "home") {
+        showError("Primero crea o elige una empresa.");
+        goToStep("home");
+        return;
+      }
       if (
         el.classList.contains("job-disabled") &&
         ["decision", "liquidity", "followup"].includes(dest)
       ) {
-        showError("Primero crea una empresa o carga la demo.");
+        showError("Primero guarda el twin (datos de la empresa) antes de simular.");
+        goToStep("twin");
+        return;
+      }
+      if (dest === "twin") {
+        enterCompanyWorkspace({ showChooser: !state.modelVersionId });
         return;
       }
       goToStep(dest);
@@ -2258,16 +3588,52 @@
   $("btn-create").addEventListener("click", () => {
     createCompanyAndTwin().catch(showCaught);
   });
+  if ($("coach_cta")) {
+    $("coach_cta").addEventListener("click", () => {
+      try {
+        runCoachCta();
+      } catch (e) {
+        showCaught(e);
+      }
+    });
+  }
+  if ($("coach_skip")) {
+    $("coach_skip").addEventListener("click", () => dismissCoach());
+  }
+  if ($("home-intent-demo")) {
+    $("home-intent-demo").addEventListener("click", () => loadDemo().catch(showCaught));
+  }
+  if ($("home-intent-sabi")) {
+    $("home-intent-sabi").addEventListener("click", () => startIntentSabi().catch(showCaught));
+  }
+  if ($("home-intent-manual")) {
+    $("home-intent-manual").addEventListener("click", () => {
+      try {
+        startIntentManual();
+      } catch (e) {
+        showCaught(e);
+      }
+    });
+  }
   if ($("btn-create-top")) {
     $("btn-create-top").addEventListener("click", () => {
       showError("");
-      goToStep("twin");
+      goToStep("home");
+      const name = $("home_company_name");
+      if (name && typeof name.focus === "function") name.focus();
     });
   }
   if ($("btn-create-home")) {
     $("btn-create-home").addEventListener("click", () => {
-      showError("");
-      goToStep("twin");
+      createCompanyShell().catch(showCaught);
+    });
+  }
+  if ($("btn-demo-home")) {
+    $("btn-demo-home").addEventListener("click", () => loadDemo().catch(showCaught));
+  }
+  if ($("sabi_file")) {
+    $("sabi_file").addEventListener("change", () => {
+      if ($("sabi_file").files && $("sabi_file").files[0]) setSabiStep(1);
     });
   }
   $("btn-save-twin").addEventListener("click", () => {
@@ -2290,6 +3656,47 @@
   $("btn-sensitivity").addEventListener("click", () => {
     runSensitivity().catch(showCaught);
   });
+  if ($("btn-tornado")) {
+    $("btn-tornado").addEventListener("click", () => {
+      runTornado().catch(showCaught);
+    });
+  }
+  if ($("btn-montecarlo")) {
+    $("btn-montecarlo").addEventListener("click", () => {
+      runMonteCarlo().catch(showCaught);
+    });
+  }
+  if ($("btn-sabi-preview")) {
+    $("btn-sabi-preview").addEventListener("click", () => {
+      previewSabi().catch(showCaught);
+    });
+  }
+  if ($("btn-sabi-confirm")) {
+    $("btn-sabi-confirm").addEventListener("click", () => {
+      confirmSabi().catch(showCaught);
+    });
+  }
+  if ($("data-path-sabi")) {
+    $("data-path-sabi").addEventListener("click", () => startIntentSabi().catch(showCaught));
+  }
+  if ($("data-path-csv")) {
+    $("data-path-csv").addEventListener("click", () => {
+      try {
+        startIntentCsv();
+      } catch (e) {
+        showCaught(e);
+      }
+    });
+  }
+  if ($("data-path-manual")) {
+    $("data-path-manual").addEventListener("click", () => {
+      try {
+        startIntentManual();
+      } catch (e) {
+        showCaught(e);
+      }
+    });
+  }
   if ($("btn-print")) {
     $("btn-print").addEventListener("click", () => {
       try {
@@ -2336,14 +3743,43 @@
   if ($("home-btn-liquidity")) {
     $("home-btn-liquidity").addEventListener("click", () => {
       if (!state.companyId) {
-        showError("Primero crea una empresa o carga la demo.");
+        showError("Primero crea o elige una empresa.");
+        goToStep("home");
+        return;
+      }
+      if (!state.modelVersionId) {
+        showError("Primero guarda el twin (datos) de la empresa.");
+        enterCompanyWorkspace({ showChooser: true });
         return;
       }
       goToStep("liquidity");
     });
   }
-  if ($("btn-demo-home")) {
-    $("btn-demo-home").addEventListener("click", () => loadDemo().catch(showCaught));
+  if ($("btn-twin-next-liq")) {
+    $("btn-twin-next-liq").addEventListener("click", () => {
+      if (!state.companyId || !state.modelVersionId) {
+        showError("Primero guarda el twin de la empresa.");
+        return;
+      }
+      goToStep("home");
+      updateHomeGates();
+      showSuccess("Twin listo. Elige Liquidez o Decidir abajo.", null, null);
+      renderCoach();
+      const ready = $("home-ready");
+      if (ready && typeof ready.scrollIntoView === "function") {
+        ready.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    });
+  }
+  if ($("btn-refresh-companies")) {
+    $("btn-refresh-companies").addEventListener("click", () => {
+      refreshCompanySelect().catch(showCaught);
+    });
+  }
+  if ($("btn-delete-all-demos")) {
+    $("btn-delete-all-demos").addEventListener("click", () => {
+      deleteAllDemoCompanies().catch(showCaught);
+    });
   }
   if ($("company_select")) {
     $("company_select").addEventListener("change", () => {
@@ -2357,9 +3793,8 @@
         goToStep("home");
         return;
       }
-      localStorage.setItem(LS_COMPANY, id);
-      state.companyId = id;
-      restoreSession().catch(showCaught);
+      const opt = $("company_select").selectedOptions[0];
+      useCompany({ id, name: opt ? opt.textContent : "" }).catch(showCaught);
     });
   }
   $("btn-register-decision").addEventListener("click", () => {
@@ -2372,12 +3807,10 @@
     markExecuted().catch(showCaught);
   });
   $("btn-record-actuals").addEventListener("click", () => {
-    recordActuals()
-      .then(() => {
-        setFollowStep(3);
-        showSuccess("Valores reales guardados. Puedes mirar los sesgos.", null, null);
-      })
-      .catch(showCaught);
+    recordActuals().catch((err) => {
+      showCaught(err);
+      showActualsFeedback(humanizeError(err), true);
+    });
   });
   $("btn-load-bias").addEventListener("click", () => {
     loadBiasProfiles().catch(showCaught);
@@ -2397,6 +3830,11 @@
     if (!id) return;
     selectDecision(id).catch(showCaught);
   });
+  if ($("actual_period")) {
+    $("actual_period").addEventListener("input", () => {
+      $("actual_period").dataset.touched = "1";
+    });
+  }
 
   window.__FT_PACKS__ = CANONICAL_PACKS;
   window.__FT_REPORT_FIELDS__ = REPORT_FIELDS;

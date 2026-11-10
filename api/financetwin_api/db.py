@@ -193,7 +193,10 @@ class Store:
 
     def get_company(self, company_id: str) -> CompanyRow | None:
         with self.connect() as conn:
-            r = conn.execute("SELECT * FROM company WHERE id=?", (company_id,)).fetchone()
+            r = conn.execute(
+                "SELECT id, name, country, currency, created_at FROM company WHERE id=?",
+                (company_id,),
+            ).fetchone()
         if not r:
             return None
         return CompanyRow(**dict(r))
@@ -204,6 +207,43 @@ class Store:
                 "SELECT id, name, country, currency, created_at FROM company ORDER BY created_at DESC"
             ).fetchall()
         return [CompanyRow(**dict(r)) for r in rows]
+
+    def rename_company(self, company_id: str, name: str) -> CompanyRow:
+        if self.get_company(company_id) is None:
+            raise KeyError(f"company not found: {company_id}")
+        clean = (name or "").strip()
+        if not clean:
+            raise ValueError("name required")
+        with self.connect() as conn:
+            conn.execute("UPDATE company SET name=? WHERE id=?", (clean, company_id))
+        row = self.get_company(company_id)
+        assert row is not None
+        return row
+
+    def delete_company(self, company_id: str) -> None:
+        if self.get_company(company_id) is None:
+            raise KeyError(f"company not found: {company_id}")
+        with self.connect() as conn:
+            # Cascade manual (SQLite FKs may not ON DELETE CASCADE everywhere)
+            dec_ids = [
+                r[0]
+                for r in conn.execute(
+                    "SELECT id FROM decision WHERE company_id=?", (company_id,)
+                ).fetchall()
+            ]
+            for did in dec_ids:
+                conn.execute("DELETE FROM actual_result WHERE decision_id=?", (did,))
+                conn.execute(
+                    "DELETE FROM decision_milestone WHERE decision_id=?", (did,)
+                )
+            conn.execute("DELETE FROM decision WHERE company_id=?", (company_id,))
+            conn.execute("DELETE FROM bias_profile WHERE company_id=?", (company_id,))
+            conn.execute(
+                "DELETE FROM calculation_run WHERE company_id=?", (company_id,)
+            )
+            conn.execute("DELETE FROM scenario WHERE company_id=?", (company_id,))
+            conn.execute("DELETE FROM model_version WHERE company_id=?", (company_id,))
+            conn.execute("DELETE FROM company WHERE id=?", (company_id,))
 
     def put_current_snapshot(
         self,
@@ -541,8 +581,8 @@ class Store:
         self, company_id: str, decision_pack_id: str, variable_key: str
     ) -> list[str]:
         """
-        Una desviación por decisión executed (la más reciente).
-        n_observations del BiasProfile = nº de decisiones similares, no filas.
+        Una desviación por periodo (decision_id + period_year_month).
+        Así 3 meses reales en la misma decisión ya habilitan calibración.
         """
         with self.connect() as conn:
             rows = conn.execute(
@@ -551,10 +591,11 @@ class Store:
                 FROM (
                     SELECT
                         a.decision_id AS decision_id,
+                        a.period_year_month AS period_year_month,
                         a.deviation_pct AS deviation_pct,
                         ROW_NUMBER() OVER (
-                            PARTITION BY a.decision_id
-                            ORDER BY a.recorded_at DESC, a.period_year_month DESC
+                            PARTITION BY a.decision_id, a.period_year_month
+                            ORDER BY a.recorded_at DESC
                         ) AS rn
                     FROM actual_result a
                     JOIN decision d ON d.id = a.decision_id
@@ -565,7 +606,7 @@ class Store:
                       AND a.deviation_pct IS NOT NULL
                 ) a
                 WHERE a.rn = 1
-                ORDER BY a.decision_id
+                ORDER BY a.decision_id, a.period_year_month
                 """,
                 (company_id, decision_pack_id, variable_key),
             ).fetchall()

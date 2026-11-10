@@ -1,0 +1,28 @@
+# Deploy: fly launch --dockerfile Dockerfile  (o fly deploy)
+# Volumen BD: fly volumes create financetwin_data --size 1
+
+app = "financetwin-demo"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  FINANCETWIN_DB = "/data/financetwin.sqlite"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "financetwin_data"
+  destination = "/data"

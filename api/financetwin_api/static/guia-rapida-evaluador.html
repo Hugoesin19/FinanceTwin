@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finance Twin — Guía rápida de uso (evaluador)</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&family=Source+Sans+3:wght@400;600&display=swap");
+    :root { --fg:#1a1f24; --muted:#4a5560; --line:#d0d7de; --accent:#0d4f4b; --soft:#f0f4f5; --ok:#e8f3ec; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Source Sans 3",system-ui,sans-serif; color:var(--fg); line-height:1.55; background:#e8ecef; }
+    .wrap { max-width:720px; margin:0 auto; padding:2rem 1.75rem 3rem; background:#fff; box-shadow:0 0 0 1px var(--line); }
+    h1,h2,h3 { font-family:"Source Serif 4",Georgia,serif; letter-spacing:-0.02em; line-height:1.25; }
+    h1 { font-size:1.65rem; color:var(--accent); margin:0 0 0.3rem; }
+    h2 { font-size:1.2rem; margin:1.75rem 0 0.55rem; padding-top:0.75rem; border-top:1px solid var(--line); }
+    h3 { font-size:1.02rem; margin:1.1rem 0 0.35rem; }
+    .lead { color:var(--muted); margin:0 0 0.5rem; }
+    .meta { color:var(--muted); font-size:0.88rem; margin-bottom:1.25rem; }
+    .url-box {
+      background:var(--soft); border:1px solid var(--line); border-radius:8px;
+      padding:0.9rem 1rem; margin:1rem 0 1.25rem; font-size:1.05rem;
+    }
+    .url-box code { font-size:1.05rem; word-break:break-all; }
+    .box { border:1px solid var(--line); border-radius:8px; padding:0.85rem 1rem; margin:0.9rem 0; background:var(--soft); }
+    .box.ok { background:var(--ok); }
+    .steps { counter-reset:s; list-style:none; padding:0; }
+    .steps li {
+      counter-increment:s; padding:0.55rem 0 0.55rem 2.5rem; position:relative;
+      border-bottom:1px dashed var(--line);
+    }
+    .steps li::before {
+      content:counter(s); position:absolute; left:0; top:0.5rem;
+      width:1.7rem; height:1.7rem; border-radius:50%; background:var(--accent); color:#fff;
+      font-weight:700; font-size:0.82rem; display:grid; place-items:center;
+    }
+    table { width:100%; border-collapse:collapse; font-size:0.9rem; margin:0.6rem 0 1rem; }
+    th,td { text-align:left; padding:0.4rem 0.45rem; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.03em; }
+    code { font-family:ui-monospace,Consolas,monospace; background:#eef2f5; padding:0.1em 0.3em; border-radius:3px; font-size:0.88em; }
+    .print-bar {
+      position:sticky; top:0; z-index:5; background:rgba(255,255,255,.94);
+      border-bottom:1px solid var(--line); padding:0.5rem 0; margin:-0.4rem 0 1rem;
+      display:flex; gap:0.5rem; flex-wrap:wrap;
+    }
+    .print-bar button {
+      font:inherit; font-weight:600; padding:0.4rem 0.85rem; border-radius:6px;
+      border:1px solid var(--line); background:var(--accent); color:#fff; cursor:pointer;
+    }
+    @media print {
+      body { background:#fff; }
+      .wrap { box-shadow:none; max-width:none; padding:0; }
+      .print-bar { display:none !important; }
+      .steps li { break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="print-bar">
+      <button type="button" onclick="window.print()">Imprimir / Guardar PDF</button>
+    </div>
+
+    <h1>Finance Twin — Guía rápida</h1>
+    <p class="lead">Instrucciones de uso para probar la aplicación en el navegador. No requiere instalar software.</p>
+    <p class="meta">Documento orientado a evaluación / demostración · recorrido recomendado ≈ 10–15 minutos</p>
+
+    <div class="url-box">
+      <strong>Dirección de acceso</strong><br />
+      <code id="app-url">https://financetwin-demo.fly.dev</code>
+      <p style="margin:0.5rem 0 0;color:var(--muted);font-size:0.9rem;">
+        Abrir en Chrome, Edge o Firefox. No hace falta cuenta, descarga ni instalación.
+        La primera carga puede tardar unos segundos si la máquina estaba dormida.
+      </p>
+    </div>
+
+    <div class="box ok">
+      <strong>Qué va a ver:</strong> un simulador de decisiones financieras para pymes.
+      Construye un “twin” (foto simplificada de la empresa), calcula escenarios (VAN, caja, políticas)
+      y permite comparar lo previsto con lo real (Twin Loop).
+    </div>
+
+    <h2>1. Recorrido recomendado (demo)</h2>
+    <ol class="steps">
+      <li>Abra la URL. En la pantalla inicial pulse <strong>Cargar escenario demo</strong>.</li>
+      <li>Espere a que aparezca el <strong>Resultado</strong> (VAN, caja mínima, lectura de políticas).</li>
+      <li>Opcional: abra <strong>Análisis avanzado</strong> → <strong>Comparar escenarios (B/C/A)</strong>.</li>
+      <li>Pulse <strong>Registrar decisión</strong> (deje el estado en <em>Ejecutada</em>).</li>
+      <li>En Twin Loop, sección 2: rellene solo la columna <strong>Real</strong> (el previsto ya viene relleno) y pulse <strong>Registrar valores reales</strong>.</li>
+      <li>Repita con al menos <strong>3 meses</strong> distintos (cambie el campo Periodo).</li>
+      <li>Pulse <strong>Calcular perfil de sesgo</strong> y luego <strong>Previsualizar calibración</strong>.</li>
+      <li>Si aparece, pulse <strong>Aplicar calibración</strong> y vuelva a <strong>Calcular escenario</strong> para ver el efecto.</li>
+    </ol>
+
+    <div class="box">
+      <strong>Valores de ejemplo para los reales (ventas):</strong>
+      previsto típico de la demo ≈ 40 000.
+      Puede usar reales 36 000, 32 800 y 32 000 en tres periodos distintos para ver un sesgo claro.
+    </div>
+
+    <h2>2. Si prefiere crear su propia empresa</h2>
+    <ol class="steps">
+      <li>En Inicio: indique un nombre → <strong>Crear empresa</strong>.</li>
+      <li>Elija fuente de datos: entrada manual, plantilla CSV o Excel SABI/PGC.</li>
+      <li>Pulse <strong>Guardar twin</strong> (o confirme la importación SABI tras <em>Previsualizar mapeo</em>).</li>
+      <li>Vaya a <strong>Decisión</strong> o <strong>Liquidez</strong>, rellene hipótesis y <strong>Calcular escenario</strong>.</li>
+    </ol>
+    <p>
+      Un Excel arbitrario sin etiquetas PGC no se interpreta solo.
+      Use la demo, la plantilla CSV o la entrada manual si no dispone de export SABI.
+    </p>
+
+    <h2>3. Mapa mínimo de la pantalla</h2>
+    <table>
+      <thead><tr><th>Menú</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td>Inicio</td><td>Empresas (crear / usar / borrar) y acceso a acciones</td></tr>
+        <tr><td>Datos / twin</td><td>Cargar o editar la foto financiera de la empresa</td></tr>
+        <tr><td>Decisión</td><td>Simular inversión, préstamo, contratación, etc.</td></tr>
+        <tr><td>Liquidez</td><td>Estresar la caja (caída de ventas, gastos extra)</td></tr>
+        <tr><td>Resultado</td><td>VAN / caja mínima y detalle del último cálculo</td></tr>
+        <tr><td>Twin Loop</td><td>Decisión registrada, reales, sesgo y calibración</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. Cómo leer el resultado (en 30 segundos)</h2>
+    <ul>
+      <li><strong>VAN &gt; 0</strong>: con la tasa usada, el proyecto crea valor en valor actual.</li>
+      <li><strong>Caja mínima</strong>: el mes más flojo de liquidez del horizonte.</li>
+      <li><strong>Políticas en Atención</strong>: se rompe la caja mínima (u otra regla); el plan puede ser frágil aunque el VAN sea atractivo.</li>
+    </ul>
+
+    <h2>5. Si algo no responde</h2>
+    <table>
+      <thead><tr><th>Situación</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td>La página no carga</td><td>Comprobar la URL; reintentar en unos segundos (el servidor puede “despertar”).</td></tr>
+        <tr><td>No deja entrar a Decisión</td><td>Crear o usar una empresa, o cargar la demo.</td></tr>
+        <tr><td>No hay previsto en Twin Loop</td><td>Calcular un escenario y Registrar decisión de nuevo.</td></tr>
+        <tr><td>No ofrece calibración</td><td>Hacen falta ≥3 periodos de reales del mismo indicador.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6. Límites (lectura honesta)</h2>
+    <ul>
+      <li>Es un prototipo de producto funcional, no un ERP ni un banco.</li>
+      <li>No sustituye asesoramiento fiscal o de inversión.</li>
+      <li>La demo usa datos simplificados (a menudo sin IVA/IS).</li>
+      <li>Los datos introducidos en la instancia compartida pueden ser visibles para quien tenga la misma URL; úsela solo con fines de evaluación.</li>
+    </ul>
+
+    <p class="meta" style="margin-top:2rem;">
+      Para más detalle conceptual: documento de demostración del sistema.
+      Para detalle de pantallas: guía de usuario completa en la aplicación (<code>/static/guia-usuario.html</code>).
+    </p>
+  </div>
+</body>
+</html>

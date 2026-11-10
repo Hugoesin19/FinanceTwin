@@ -271,6 +271,29 @@ body {
   color: var(--accent);
 }
 
+.home-create-panel {
+  margin-bottom: 1.5rem;
+}
+.home-create-row {
+  margin: 0.75rem 0 0.25rem;
+}
+.home-companies-block {
+  margin-top: 0.5rem;
+}
+.active-pill {
+  color: var(--accent, #0b6e4f);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.mgmt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.side-link.nav-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .onboard-panel {
   background: var(--card-solid);
   border: 1px solid var(--line);
@@ -332,6 +355,257 @@ body {
 }
 
 .demo-banner strong { margin-right: 0.35rem; }
+
+.coach-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0.75rem 1.25rem 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(11, 110, 107, 0.35);
+  background: linear-gradient(135deg, #e8f6f5 0%, #f7fafb 100%);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.coach-bar[hidden] { display: none !important; }
+.coach-kicker {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.15rem;
+}
+.coach-text {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--fg);
+  max-width: 42rem;
+}
+.coach-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.intent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 1.5rem;
+}
+.intent-grid-compact { margin-bottom: 1rem; }
+.data-help-note {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  background: #f7f1de;
+  border-radius: 10px;
+  border: 1px solid rgba(107, 82, 0, 0.2);
+}
+.data-path-chooser {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.intent-card {
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.15rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.intent-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px rgba(15, 28, 36, 0.06);
+}
+.intent-card-primary {
+  border-color: rgba(11, 110, 107, 0.45);
+  background: var(--accent-soft);
+}
+.intent-card .job-title {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.intent-card .job-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  flex: 1;
+}
+.intent-card .job-cta {
+  margin-top: 0.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.sabi-flow {
+  border: 1px solid rgba(11, 110, 107, 0.3);
+  border-radius: 14px;
+  padding: 1rem 1.15rem 1.15rem;
+  margin-bottom: 1.25rem;
+  background: #f4fbfa;
+}
+.sabi-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.65rem 0 0.85rem;
+}
+.sabi-step {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+.sabi-step.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.sabi-step.done {
+  border-color: rgba(26, 92, 46, 0.35);
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.side-link[hidden] { display: none !important; }
+
+.mgmt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.mgmt-actions .secondary {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+}
+
+.calib-panel {
+  margin: 0.75rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border, #d5dde3);
+  border-radius: 8px;
+  background: #f7faf8;
+}
+.calib-panel[hidden] { display: none !important; }
+.actual-items-host[hidden] { display: none !important; }
+.forecast-cell {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.actual-input {
+  width: 100%;
+  max-width: 11rem;
+  font-variant-numeric: tabular-nums;
+}
+.save-feedback {
+  margin: 0.65rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: var(--ok-bg);
+  color: var(--ok);
+  border: 1px solid rgba(26, 92, 46, 0.28);
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.save-feedback[hidden] { display: none !important; }
+.save-feedback.warn-fb {
+  background: var(--warn-bg);
+  color: #6b5200;
+  border-color: rgba(107, 82, 0, 0.3);
+}
+
+@media (max-width: 720px) {
+  .coach-bar {
+    margin: 0.5rem 0.75rem 0;
+  }
+}
+
+.tradeoff-box {
+  margin: 0.85rem 0 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #f7fafb;
+  font-size: 0.95rem;
+}
+.tradeoff-box.ok {
+  background: var(--ok-bg);
+  border-color: rgba(26, 92, 46, 0.3);
+}
+.tradeoff-box.warn {
+  background: var(--warn-bg);
+  border-color: rgba(107, 82, 0, 0.3);
+}
+.tradeoff-box strong { display: block; margin-bottom: 0.25rem; }
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.75rem 0 1rem;
+}
+.preset-chip {
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  color: var(--fg);
+}
+.preset-chip:hover, .preset-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.scorecard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+.score-pill {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: #fff;
+  font-size: 0.85rem;
+}
+.score-pill .k { color: var(--muted); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+.score-pill .v { font-weight: 700; margin-top: 0.15rem; }
+
+.import-preview {
+  background: #f7fafb;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+}
 
 .metrics-heading {
   font-size: 0.9rem;

@@ -15,30 +15,41 @@
       </div>
       <nav class="sidebar-nav">
         <button type="button" class="side-link active" data-goto="home" id="nav-home">Inicio</button>
-        <button type="button" class="side-link" data-goto="decision" id="nav-decision">Decidir</button>
+        <button type="button" class="side-link" data-goto="twin" id="nav-twin">Datos / twin</button>
+        <button type="button" class="side-link" data-goto="decision" id="nav-decision">Decisión</button>
         <button type="button" class="side-link" data-goto="liquidity" id="nav-liquidity">Liquidez</button>
-        <button type="button" class="side-link" data-goto="report" id="nav-report" disabled>Resultado</button>
-        <button type="button" class="side-link" data-goto="followup" id="nav-followup">Seguimiento</button>
-        <button type="button" class="side-link" data-goto="twin" id="nav-twin">Datos</button>
+        <button type="button" class="side-link nav-late" data-goto="report" id="nav-report" disabled hidden>Resultado</button>
+        <button type="button" class="side-link nav-late" data-goto="followup" id="nav-followup" hidden>Twin Loop</button>
       </nav>
-      <p class="sidebar-foot">Los números los calcula el motor.<br />
-        <a href="/static/guia-usuario.html" class="side-doc-link" target="_blank" rel="noopener">Guía de usuario (PDF)</a>
+      <p class="sidebar-foot">Un paso cada vez. Los números los calcula el motor.<br />
+        <a href="/static/guia-usuario.html" class="side-doc-link" target="_blank" rel="noopener">Guía de usuario</a>
       </p>
     </aside>
 
     <div class="app-main">
       <header id="context-bar" class="context-bar no-print">
         <div class="context-left">
-          <label class="context-company">Empresa
+          <label class="context-company">Empresa activa
             <select id="company_select"><option value="">— Seleccionar —</option></select>
           </label>
           <span id="context_status" class="context-status">Sin empresa</span>
         </div>
         <div class="context-actions">
-          <button type="button" id="btn-create-top" class="secondary">+ Crear empresa</button>
-          <button type="button" id="btn-demo" class="secondary">Cargar demo</button>
+          <button type="button" id="btn-create-top" class="secondary">+ Nueva empresa</button>
+          <button type="button" id="btn-demo" class="secondary" hidden>Cargar demo</button>
         </div>
       </header>
+
+      <div id="coach_bar" class="coach-bar no-print" role="status">
+        <div class="coach-copy">
+          <span class="coach-kicker">Siguiente paso</span>
+          <p id="coach_text" class="coach-text">Cree o seleccione una empresa para continuar.</p>
+        </div>
+        <div class="coach-actions">
+          <button type="button" id="coach_cta" class="primary">Continuar</button>
+          <button type="button" id="coach_skip" class="linkish" hidden>Omitir</button>
+        </div>
+      </div>
 
       <div id="status-bar" class="status-bar" hidden>
         <span class="spinner" aria-hidden="true"></span>
@@ -49,55 +60,145 @@
 
       <main class="workspace">
         <section id="sec-home" class="panel panel-home" data-step="home" hidden>
-          <h1 class="workspace-title">¿Qué quieres hacer?</h1>
-          <p class="workspace-lead">Empieza por una empresa. Luego decide, revisa caja o sigue el plan.</p>
+          <h1 class="workspace-title">Tus empresas</h1>
+          <p class="workspace-lead">Sin empresa no puedes continuar. Crea una o elige una de la lista.</p>
 
-          <div id="home-onboard" class="onboard-panel">
-            <h2 class="onboard-title">Primero, elige un camino</h2>
-            <p class="hint">Sin empresa no puedes simular. Carga la demo o crea la tuya.</p>
+          <div id="home-onboard" class="onboard-panel home-create-panel">
+            <h2 class="onboard-title">Crear empresa</h2>
+            <p class="hint">Solo el nombre. Luego eliges cómo meter los datos (demo, Excel o a mano).</p>
+            <div class="row home-create-row">
+              <label>Nombre
+                <input id="home_company_name" value="" placeholder="Ej. Mi SL" />
+              </label>
+              <label>País
+                <input id="home_company_country" value="ES" />
+              </label>
+            </div>
             <div class="onboard-actions">
-              <button type="button" id="btn-demo-home" class="primary onboard-cta">Cargar demo (tienda)</button>
-              <button type="button" id="btn-create-home" class="secondary onboard-cta">Crear mi empresa</button>
+              <button type="button" id="btn-create-home" class="primary onboard-cta">Crear empresa</button>
+              <button type="button" id="btn-demo-home" class="secondary onboard-cta">Cargar escenario demo</button>
             </div>
           </div>
 
-          <div id="home-company-card" class="company-card" hidden>
-            <div class="company-card-head">
-              <span class="job-kicker">Empresa activa</span>
-              <button type="button" class="linkish" data-goto="twin">Editar datos</button>
+          <div id="sec-companies-mgmt" class="home-companies-block">
+            <h2 class="wiz-heading">Empresas guardadas</h2>
+            <p class="hint">Usar entra en esa empresa. Borrar elimina twin, cálculos y decisiones.</p>
+            <div class="table-wrap">
+              <table id="companies-mgmt-table">
+                <thead>
+                  <tr><th>Nombre</th><th>Creada</th><th>Acciones</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
             </div>
-            <p id="home_company_summary" class="company-card-body"></p>
-            <div id="home_quality" class="home-quality" hidden></div>
-            <p id="home_last_run" class="meta"></p>
+            <div class="actions">
+              <button type="button" id="btn-refresh-companies" class="secondary">Actualizar lista</button>
+              <button type="button" id="btn-delete-all-demos" class="secondary">Borrar todas las «Demo Tienda»</button>
+            </div>
+            <p id="companies_mgmt_meta" class="meta"></p>
           </div>
 
-          <div class="job-grid">
-            <button type="button" class="job-card" data-goto="decision" id="home-btn-decide">
-              <span class="job-kicker">Decidir</span>
-              <span class="job-title">Simular una decisión</span>
-              <span class="job-desc">Inversión, contratación, financiación… y ver el impacto en caja.</span>
-              <span class="job-cta">Empezar →</span>
-            </button>
-            <button type="button" class="job-card" id="home-btn-liquidity">
-              <span class="job-kicker">Liquidez</span>
-              <span class="job-title">¿Aguanto de caja?</span>
-              <span class="job-desc">Estrés de ventas y salidas: cuánto aguantas sin romper política.</span>
-              <span class="job-cta">Empezar →</span>
-            </button>
-            <button type="button" class="job-card" data-goto="followup" id="home-btn-followup">
-              <span class="job-kicker">Seguimiento</span>
-              <span class="job-title">Plan vs realidad</span>
-              <span class="job-desc">Registra la decisión y anota lo que ocurrió de verdad.</span>
-              <span class="job-cta">Empezar →</span>
-            </button>
+          <!-- Hub post-empresa (si vuelves a Inicio con empresa activa) -->
+          <div id="home-ready" hidden>
+            <div id="home-company-card" class="company-card">
+              <div class="company-card-head">
+                <span class="job-kicker">Empresa activa</span>
+                <button type="button" class="linkish" data-goto="twin">Editar datos</button>
+              </div>
+              <p id="home_company_summary" class="company-card-body"></p>
+              <div id="home_quality" class="home-quality" hidden></div>
+              <p id="home_last_run" class="meta"></p>
+            </div>
+
+            <h2 class="wiz-heading" style="margin-top:1.5rem;">Acciones disponibles</h2>
+            <div class="job-grid">
+              <button type="button" class="job-card" data-goto="twin" id="home-btn-data">
+                <span class="job-kicker">Twin</span>
+                <span class="job-title">Datos del twin</span>
+                <span class="job-desc">Importación SABI/PGC, plantilla CSV, entrada manual o escenario demo.</span>
+                <span class="job-cta">Abrir →</span>
+              </button>
+              <button type="button" class="job-card" data-goto="decision" id="home-btn-decide">
+                <span class="job-kicker">Decisión</span>
+                <span class="job-title">Simular decisión</span>
+                <span class="job-desc">Packs de inversión, financiación, contratación y activos.</span>
+                <span class="job-cta">Abrir →</span>
+              </button>
+              <button type="button" class="job-card" id="home-btn-liquidity">
+                <span class="job-kicker">Liquidez</span>
+                <span class="job-title">Análisis de liquidez</span>
+                <span class="job-desc">Estrés de ventas/opex y cumplimiento de política de caja mínima.</span>
+                <span class="job-cta">Abrir →</span>
+              </button>
+              <button type="button" class="job-card" data-goto="followup" id="home-btn-followup">
+                <span class="job-kicker">Twin Loop</span>
+                <span class="job-title">Plan vs realidad</span>
+                <span class="job-desc">Registro de decisión, valores reales, sesgo y calibración.</span>
+                <span class="job-cta">Abrir →</span>
+              </button>
+            </div>
           </div>
         </section>
 
         <section id="sec-company" class="panel" data-step="twin" hidden>
-          <h1 class="workspace-title">Datos de la empresa</h1>
-          <p class="workspace-lead">Caja, ingresos y costes con los que simulas. Sin esto, el resto miente.</p>
+          <h1 class="workspace-title">Datos del twin</h1>
+          <p class="workspace-lead" id="twin_workspace_lead">Snapshot de caja, ingresos y costes usado por el motor.</p>
 
-          <details class="disclose" open>
+          <div id="data_path_chooser" class="data-path-chooser" hidden>
+            <h2 class="wiz-heading">Fuente de datos</h2>
+            <p id="data_help_note" class="hint data-help-note">
+              Seleccione una fuente. Un Excel sin etiquetas PGC no se mapea automáticamente: use SABI/PGC, la plantilla CSV o entrada manual.
+            </p>
+            <div id="home-intent" class="intent-grid intent-grid-compact">
+              <button type="button" class="intent-card" id="home-intent-demo" data-path="demo">
+                <span class="job-kicker">Referencia</span>
+                <span class="job-title">Escenario demo</span>
+                <span class="job-desc">Empresa de ejemplo con cálculo new_site preejecutado.</span>
+              </button>
+              <button type="button" class="intent-card intent-card-primary" id="home-intent-sabi" data-path="sabi">
+                <span class="job-kicker">Importación</span>
+                <span class="job-title">Excel SABI / PGC</span>
+                <span class="job-desc">Mapeo por etiquetas PGC (tesorería, cifra de negocios, etc.).</span>
+              </button>
+              <button type="button" class="intent-card" id="data-path-csv" data-path="csv">
+                <span class="job-title">Plantilla CSV</span>
+                <span class="job-desc">Esquema de columnas fijo de Finance Twin.</span>
+              </button>
+              <button type="button" class="intent-card" id="home-intent-manual" data-path="manual">
+                <span class="job-title">Entrada manual</span>
+                <span class="job-desc">Formulario de caja, ingresos y costes.</span>
+              </button>
+            </div>
+            <!-- aliases legacy ids -->
+            <button type="button" id="data-path-sabi" hidden aria-hidden="true" tabindex="-1">SABI</button>
+            <button type="button" id="data-path-manual" hidden aria-hidden="true" tabindex="-1">Manual</button>
+          </div>
+
+          <div id="sabi_flow" class="sabi-flow" hidden>
+            <h2 class="wiz-heading">Excel SABI / PGC</h2>
+            <div class="sabi-steps" aria-label="Pasos SABI">
+              <span class="sabi-step active" data-sabi-step="1" id="sabi-step-1">1 · Cargar archivo</span>
+              <span class="sabi-step" data-sabi-step="2" id="sabi-step-2">2 · Previsualizar</span>
+              <span class="sabi-step" data-sabi-step="3" id="sabi-step-3">3 · Confirmar</span>
+            </div>
+            <p class="hint">
+              El importador localiza filas por <strong>etiquetas PGC</strong> en el texto
+              (p. ej. «Tesorería», «Importe neto de la cifra de negocios»), no por posición de columna.
+              Revise el mapeo en la previsualización antes de confirmar. Si el fichero no usa esas etiquetas, use plantilla CSV o entrada manual.
+            </p>
+            <div class="row">
+              <label>Excel/CSV SABI <input id="sabi_file" type="file" accept=".csv,.xlsx,.xlsm,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" /></label>
+              <label>Mes de ancla (YYYY-MM) <input id="sabi_year_month" value="2025-01" /></label>
+            </div>
+            <div class="actions">
+              <button type="button" id="btn-sabi-preview" class="secondary" disabled>Previsualizar mapeo</button>
+              <button type="button" id="btn-sabi-confirm" class="primary" disabled>Confirmar e importar twin</button>
+            </div>
+            <div id="sabi_preview" class="import-preview" hidden></div>
+            <p id="import_meta" class="meta"></p>
+          </div>
+
+          <details class="disclose" id="sec-cash" open>
             <summary>Caja y políticas</summary>
             <div class="row">
               <label>Nombre de la empresa <input id="company_name" value="Demo SL" /></label>
@@ -111,28 +212,28 @@
               <label>Impuesto sociedades (ej. 0.25) <input id="corp_tax_rate" value="0" /></label>
             </div>
             <div class="actions">
-              <button type="button" id="btn-create" class="primary">Crear empresa</button>
-              <button type="button" id="btn-save-twin" class="secondary" disabled>Actualizar twin</button>
-              <button type="button" class="secondary" data-goto="decision">Ir a Decidir →</button>
+              <button type="button" id="btn-create" class="primary">Crear empresa con estos datos</button>
+              <button type="button" id="btn-save-twin" class="secondary" disabled>Guardar twin</button>
+              <button type="button" class="secondary" id="btn-twin-next-liq">Continuar a simulación →</button>
             </div>
             <p id="company_meta" class="meta"></p>
             <p id="twin_summary" class="twin-summary" hidden></p>
             <p id="twin_next" class="next-hint" hidden></p>
           </details>
 
-          <details class="disclose" open>
+          <details class="disclose" id="sec-quality">
             <summary>Calidad del twin</summary>
             <div id="twin_quality_panel">
               <div id="twin_quality_badges" class="badge-row"></div>
               <details class="disclose nested">
-                <summary>Ver checklist</summary>
+                <summary>Checklist de calidad</summary>
                 <ul id="twin_quality_list" class="quality-list"></ul>
               </details>
               <p id="twin_quality_meta" class="meta"></p>
             </div>
           </details>
 
-          <details class="disclose">
+          <details class="disclose" id="sec-revenues">
             <summary>Ingresos</summary>
             <div class="table-wrap">
               <table id="rev-table">
@@ -143,7 +244,7 @@
             <div class="actions"><button type="button" id="btn-add-rev" class="secondary">Añadir ingreso</button></div>
           </details>
 
-          <details class="disclose">
+          <details class="disclose" id="sec-costs">
             <summary>Costes</summary>
             <div class="table-wrap">
               <table id="cost-table">
@@ -155,16 +256,19 @@
           </details>
 
           <details class="disclose" id="sec-import">
-            <summary>Importar CSV</summary>
-            <p class="hint">Plantilla: <a href="/templates/twin_snapshot_template.csv" download>descargar plantilla</a>.</p>
+            <summary>Plantilla CSV (Excel propio adaptado)</summary>
+            <p class="hint">
+              Descarga la plantilla, ábrela en Excel y rellena <strong>nuestras</strong> columnas
+              (no las tuyas inventadas). Luego súbela aquí.
+              <a href="/templates/twin_snapshot_template.csv" download>Descargar plantilla CSV</a>
+            </p>
             <div class="row">
               <label>Archivo CSV <input id="import_file" type="file" accept=".csv,text/csv" /></label>
               <label>Etiqueta <input id="import_label" value="csv-import" /></label>
             </div>
             <div class="actions">
-              <button type="button" id="btn-import-csv" class="secondary" disabled>Importar twin</button>
+              <button type="button" id="btn-import-csv" class="secondary" disabled>Importar plantilla</button>
             </div>
-            <p id="import_meta" class="meta"></p>
             <details class="disclose nested">
               <summary>Detalle técnico</summary>
               <pre id="import_out" class="out"></pre>
@@ -201,13 +305,19 @@
 
           <div id="wiz-pane-2" class="wiz-pane" hidden>
             <h2 class="wiz-heading" id="pack_legend">Hipótesis</h2>
-            <label class="variant-label">Escenario a detallar
+            <p class="hint" id="hypotheses_hint">Tú decides cada cifra. No hay atajos ni presets: como en la empresa real.</p>
+            <label class="variant-label">Escenario a calcular ahora
               <select id="variant">
-                <option value="base">Base</option>
-                <option value="conservative">Conservador</option>
-                <option value="adverse">Adverso</option>
+                <option value="base">Base (tus cifras tal cual)</option>
+                <option value="conservative">Conservador (el motor endurece un poco)</option>
+                <option value="adverse">Adverso (el motor endurece más)</option>
               </select>
             </label>
+            <p class="hint" id="variant_explain">
+              <strong>Sí influye.</strong> No es solo un nombre: al elegir Conservador/Adverso el motor aplica automáticamente
+              hipótesis más duras (p. ej. menos ventas, más costes o tipos más altos según la decisión).
+              Usa «Comparar 3» en el resultado para ver los tres a la vez.
+            </p>
             <div class="grid" id="pack_fields"></div>
             <details class="disclose" id="pack_advanced" hidden>
               <summary>Campos avanzados</summary>
@@ -224,8 +334,8 @@
             <p class="hint" id="wiz_calc_hint">Una acción principal. El motor hace el resto.</p>
             <div class="actions">
               <button type="button" id="btn-run" class="primary" disabled>Calcular escenario</button>
-              <button type="button" id="btn-compare" class="secondary" disabled>Comparar 3 escenarios</button>
-              <button type="button" class="secondary" id="wiz-back-3">← Ajustar hipótesis</button>
+              <button type="button" id="btn-compare" class="secondary" disabled>Comparar escenarios (B/C/A)</button>
+              <button type="button" class="secondary" id="wiz-back-3">← Editar hipótesis</button>
             </div>
             <p id="run_meta" class="meta"></p>
             <p id="decision_next" class="next-hint" hidden></p>
@@ -249,25 +359,46 @@
               <span class="hero-value" id="hero_value">—</span>
             </div>
             <p class="report-reading" id="report_reading"></p>
+            <div id="tradeoff_box" class="tradeoff-box" hidden></div>
             <p id="policy-summary" class="policy-badge meta"></p>
+            <p id="runway_line" class="meta" hidden></p>
+            <p id="dscr_block" class="meta" hidden></p>
+            <div id="scorecard_block" class="scorecard-grid" hidden></div>
           </div>
 
           <div class="actions result-actions no-print">
             <button type="button" class="primary" data-goto="followup" id="btn-goto-register">Registrar decisión</button>
-            <button type="button" id="btn-download-report" class="secondary" disabled>Descargar informe</button>
-            <button type="button" class="secondary" data-goto="decision">Ajustar hipótesis</button>
+            <button type="button" class="secondary" data-goto="decision" id="btn-adjust-hyp">Editar hipótesis</button>
           </div>
+
           <details class="disclose no-print" id="result-more-actions">
-            <summary>Más acciones</summary>
+            <summary>Análisis avanzado</summary>
             <div class="actions">
-              <button type="button" id="btn-compare-report" class="secondary" disabled>Comparar 3 escenarios</button>
-              <button type="button" id="btn-sensitivity" class="secondary" disabled>¿Qué tendría que pasar?</button>
+              <button type="button" id="btn-compare-report" class="secondary" disabled>Comparar escenarios (B/C/A)</button>
+              <button type="button" id="btn-sensitivity" class="secondary" disabled>Análisis de sensibilidad</button>
+              <button type="button" id="btn-tornado" class="secondary" disabled>Análisis tornado</button>
+              <button type="button" id="btn-montecarlo" class="secondary" disabled>Simulación Monte Carlo</button>
+              <button type="button" id="btn-download-report" class="secondary" disabled>Descargar informe HTML</button>
               <button type="button" id="btn-print" class="secondary">Imprimir</button>
             </div>
           </details>
 
-          <h3 class="metrics-heading">Otros indicadores</h3>
-          <div id="metrics" class="metrics"></div>
+          <details class="disclose" id="detail-metrics-wrap">
+            <summary>Otros indicadores</summary>
+            <div id="metrics" class="metrics"></div>
+          </details>
+
+          <details class="disclose" id="tornado-block" hidden>
+            <summary>Tornado — qué mueve más el VAN / caja</summary>
+            <p id="tornado_hint" class="hint">Pulsa «Tornado» para ordenar variables por impacto.</p>
+            <div id="tornado_tables"></div>
+          </details>
+
+          <details class="disclose" id="montecarlo-block" hidden>
+            <summary>Incertidumbre (Monte Carlo)</summary>
+            <p id="montecarlo_hint" class="hint">Rangos sobre ventas, margen y CAPEX. Copy honesto: bajo tus rangos, no «probabilidad de éxito».</p>
+            <div id="montecarlo_out" class="meta"></div>
+          </details>
 
           <details class="disclose" id="detail-compare">
             <summary>Comparación de escenarios</summary>
@@ -363,6 +494,7 @@
 
             <details class="disclose" open>
               <summary>1. Registrar decisión</summary>
+              <p class="hint">Guarda el cálculo que acabas de simular. Al registrar, el <strong>previsto</strong> (ventas, CAPEX, etc.) queda congelado para comparar después con lo real.</p>
               <div class="row">
                 <label>Título <input id="dec_title" value="Decisión UI" /></label>
                 <label>Fecha (YYYY-MM-DD) <input id="dec_date" value="2027-01-15" /></label>
@@ -378,8 +510,8 @@
               </label>
               <div class="actions">
                 <button type="button" id="btn-register-decision" class="primary" disabled>Registrar decisión</button>
-                <button type="button" id="btn-mark-executed" class="secondary" disabled>Marcar como ejecutada</button>
-                <button type="button" class="secondary" data-goto="report">← Resultado</button>
+                <button type="button" id="btn-mark-executed" class="secondary" disabled>Cambiar estado a ejecutada</button>
+                <button type="button" class="secondary" data-goto="report">← Volver al resultado</button>
               </div>
               <p id="decision_meta" class="meta"></p>
               <p id="follow_next" class="next-hint" hidden></p>
@@ -406,44 +538,68 @@
 
             <details class="disclose" id="actuals-block" open>
               <summary>2. Anotar lo que ocurrió</summary>
-              <p id="actuals_empty" class="empty-state">Selecciona una decisión de la lista para anotar valores reales.</p>
+              <p id="actuals_empty" class="empty-state">Tras registrar una decisión, elige el mes y escribe solo lo real. El previsto ya viene de tu simulación.</p>
+              <p id="actuals_howto" class="hint" hidden>
+                El <strong>previsto</strong> se congela al registrar la decisión (no lo rellenas tú).
+                Solo escribe la columna <strong>Real</strong> del mes y guarda. Repite con otro mes cuando quieras.
+              </p>
               <div class="row">
                 <label>Decisión
                   <select id="actual_decision_id"></select>
                 </label>
-                <label>Periodo (YYYY-MM) <input id="actual_period" value="2027-06" /></label>
+                <label>Mes (YYYY-MM) <input id="actual_period" value="2027-06" /></label>
               </div>
-              <div class="grid" id="actual_items"></div>
+              <div id="actual_items" class="actual-items-host" hidden aria-hidden="true"></div>
               <div class="table-wrap" style="margin-top:0.75rem;">
                 <table id="forecast-actual-table">
-                  <thead><tr><th>Variable</th><th>Previsto</th><th>Real</th></tr></thead>
+                  <thead><tr><th>Qué medimos</th><th>Previsto (simulación)</th><th>Real (tú)</th></tr></thead>
                   <tbody></tbody>
                 </table>
               </div>
-              <p id="follow_review_hint" class="next-hint">Cuando cierre el mes, vuelve y anota lo real.</p>
+              <p id="follow_review_hint" class="next-hint">Con 3 meses guardados podrás ver si sueles ser optimista o pesimista.</p>
               <div class="actions">
-                <button type="button" id="btn-record-actuals" class="primary" disabled>Guardar valores reales</button>
+                <button type="button" id="btn-record-actuals" class="primary" disabled>Registrar valores reales</button>
               </div>
+              <p id="actuals_feedback" class="save-feedback" hidden role="status"></p>
               <details class="disclose nested">
                 <summary>Detalle técnico</summary>
                 <pre id="actuals_out" class="out"></pre>
               </details>
             </details>
 
-            <details class="disclose">
-              <summary>Ver aprendizaje (sesgos)</summary>
-              <p class="hint">Con al menos 3 meses de datos reales podemos ajustar hipótesis automáticamente. Si la API ofrece calibración (<code>offered</code>), puedes aplicarla al formulario.</p>
+            <details class="disclose" id="bias-block" open>
+              <summary>3. Aprender del sesgo</summary>
+              <p class="hint" id="bias_plain_hint">
+                El <strong>sesgo típico</strong> es la mediana de
+                <code>(previsto − real) / previsto</code> en cada mes.
+                Con ≥3 periodos del mismo indicador puede ejecutarse la
+                <strong>previsualización de calibración</strong>
+                (<code>calibrado = valor × (1 − sesgo_mediano)</code>).
+              </p>
+              <div id="bias_human" class="tradeoff-box" hidden></div>
               <div class="actions">
-                <button type="button" id="btn-load-bias" class="secondary" disabled>Ver sesgos</button>
-                <button type="button" id="btn-calib-preview" class="secondary" disabled>Probar calibración</button>
-                <button type="button" id="btn-apply-calib" hidden>Aplicar hipótesis calibradas</button>
+                <button type="button" id="btn-load-bias" class="secondary" disabled>Calcular perfil de sesgo</button>
+                <button type="button" id="btn-calib-preview" class="secondary" disabled>Previsualizar calibración</button>
+                <button type="button" id="btn-apply-calib" class="primary" hidden>Aplicar calibración</button>
+              </div>
+              <div id="calib_panel" class="calib-panel" hidden>
+                <p id="calib_feedback" class="save-feedback" role="status"></p>
+                <div class="table-wrap">
+                  <table id="calib-compare-table">
+                    <thead>
+                      <tr><th>Hipótesis</th><th>Ahora</th><th>Calibrada</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+                <p id="calib_next" class="next-hint" hidden></p>
               </div>
               <div class="table-wrap">
                 <table id="bias-table">
                   <thead>
                     <tr>
-                      <th>variable</th><th>n</th>
-                      <th>sesgo mediano</th><th>dirección</th><th>confianza</th>
+                      <th>Indicador</th><th>meses</th>
+                      <th>sesgo típico</th><th>tendencia</th><th>confianza</th>
                     </tr>
                   </thead>
                   <tbody></tbody>

@@ -184,7 +184,7 @@ Lista perfiles de sesgo del pack.
 
 ### `POST /companies/{company_id}/packs/{pack_id}/calibration/preview`
 
-Ofrece inputs calibrados **solo** si alguna key tiene `n_observations >= 3` (§2.6), donde `n` = nº de **decisiones** executed con ActualResult (no filas/periodos):
+Ofrece inputs calibrados **solo** si alguna key tiene `n_observations >= 3` (§2.6), donde `n` = nº de **periodos** (mes) con ActualResult en decisiones `executed` del pack:
 
 `calibrated = user_value * (1 - median_bias)`
 

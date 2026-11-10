@@ -9,6 +9,7 @@ from financetwin_engine.analytics.bias import (
     compute_bias_stats,
     confidence_for_n,
     deviation_pct,
+    forecast_by_key_from_inputs,
     offer_calibration,
 )
 
@@ -49,6 +50,24 @@ def test_bias_stats_median_and_confidence() -> None:
     assert s3.median_bias == Decimal("0.18")
     assert s3.confidence == "medium"
     assert s3.direction == "overestimate"
+
+
+def test_forecast_by_key_from_new_site_inputs() -> None:
+    out = forecast_by_key_from_inputs(
+        decision_pack_id="new_site",
+        actual_keys=["sales_monthly", "capex_total", "min_cash", "payroll_monthly"],
+        pack_inputs={
+            "sales_run_rate": "40000",
+            "capex_total": "350000",
+            "headcount": 2,
+            "employer_cost_per_person": "2800",
+        },
+        run_results={"financing_need": {"min_cash": "12000"}},
+    )
+    assert out["sales_monthly"] == "40000"
+    assert out["capex_total"] == "350000"
+    assert out["min_cash"] == "12000"
+    assert out["payroll_monthly"] == "5600"
 
 
 def test_offer_calibration_empty_mapping() -> None:

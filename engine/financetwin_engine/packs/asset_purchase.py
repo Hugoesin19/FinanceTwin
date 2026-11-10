@@ -29,16 +29,22 @@ class AssetPurchasePack:
             PackInput("acquisition_cost", "Coste adquisición", "money", True),
             PackInput("acquisition_year_month", "Mes adquisición", "year_month", True),
             PackInput("useful_life_months", "Vida útil (meses)", "count", True),
-            PackInput("funding_mode", "Financiación", "enum", True, enum_values=("cash", "loan", "leasing_as_cost")),
+            PackInput(
+                "funding_mode",
+                "Financiación",
+                "enum",
+                True,
+                enum_values=("cash", "loan", "leasing_as_cost", "renting_as_cost"),
+            ),
             PackInput("residual_value", "Valor residual", "money", False),
             PackInput("depreciation_method", "Amortización", "enum", False, enum_values=("straight_line", "declining_simple")),
             PackInput("loan_principal", "Principal préstamo", "money", False),
             PackInput("loan_annual_rate", "TIN", "rate", False),
-            PackInput("loan_term_months", "Plazo préstamo", "count", False),
+            PackInput("loan_term_months", "Plazo préstamo (meses; corto o largo)", "count", False),
             PackInput("loan_grace_months", "Carencia", "count", False),
             PackInput("loan_grace_type", "Tipo carencia", "enum", False, enum_values=("capital", "total")),
-            PackInput("leasing_monthly", "Cuota leasing", "money", False),
-            PackInput("leasing_term_months", "Plazo leasing", "count", False),
+            PackInput("leasing_monthly", "Cuota leasing/renting", "money", False),
+            PackInput("leasing_term_months", "Plazo leasing/renting", "count", False),
             PackInput("opex_savings_monthly", "Ahorro opex/mes", "money", False),
             PackInput("cost_item_id_to_reduce", "Coste a reducir", "text", False),
             PackInput("revenue_uplift_monthly", "Uplift ventas/mes", "money", False),
@@ -83,7 +89,7 @@ class AssetPurchasePack:
         if has_errors(issues):
             return issues
         mode = inputs["funding_mode"]
-        if mode not in ("cash", "loan", "leasing_as_cost"):
+        if mode not in ("cash", "loan", "leasing_as_cost", "renting_as_cost"):
             issues.append(Issue("error", "invalid_mode", f"bad funding_mode: {mode}"))
         if mode == "loan":
             for k in ("loan_principal", "loan_annual_rate", "loan_term_months"):
@@ -92,14 +98,20 @@ class AssetPurchasePack:
             grace = int(inputs.get("loan_grace_months") or 0)
             if grace > 0 and inputs.get("loan_grace_type") not in ("capital", "total"):
                 issues.append(Issue("error", "missing_grace_type", "grace_type required"))
-        if mode == "leasing_as_cost":
+        if mode in ("leasing_as_cost", "renting_as_cost"):
             if inputs.get("leasing_monthly") is None or inputs.get("leasing_term_months") is None:
-                issues.append(Issue("error", "missing_leasing", "leasing_monthly and term required"))
+                issues.append(
+                    Issue(
+                        "error",
+                        "missing_leasing",
+                        "leasing_monthly and term required for leasing/renting",
+                    )
+                )
             issues.append(
                 Issue(
                     "warning",
                     "leasing_simplification",
-                    "leasing_as_cost is a cash simplification; not full lease accounting; purchase VAN/TIR not applied",
+                    f"{mode} is a cash simplification (cuota operativa); not full lease accounting; purchase VAN/TIR not applied",
                 )
             )
         uplift = d(inputs.get("revenue_uplift_monthly"), ZERO)
@@ -124,6 +136,7 @@ class AssetPurchasePack:
                 modes.append("loan")
             if resolved.get("leasing_monthly") is not None and resolved.get("leasing_term_months") is not None:
                 modes.append("leasing_as_cost")
+                modes.append("renting_as_cost")
 
         if resolved.get("compare_funding_modes"):
             for mode in modes:
@@ -134,7 +147,7 @@ class AssetPurchasePack:
                 # validate skip for compare siblings if incomplete
                 if mode == "loan" and adj.get("loan_annual_rate") is None:
                     continue
-                if mode == "leasing_as_cost" and adj.get("leasing_monthly") is None:
+                if mode in ("leasing_as_cost", "renting_as_cost") and adj.get("leasing_monthly") is None:
                     continue
                 ops, meta = self._ops(snapshot, adj, mode)
                 variants[mode] = VariantPlan(name=mode, build_ops=ops, **meta)
@@ -149,7 +162,7 @@ class AssetPurchasePack:
                 adj["revenue_uplift_monthly"] = d(resolved.get("revenue_uplift_monthly"), ZERO) * D(sales_f)
                 adj["opex_savings_monthly"] = d(resolved.get("opex_savings_monthly"), ZERO) * D(sales_f)
                 mode = resolved["funding_mode"]
-                if mode == "leasing_as_cost":
+                if mode in ("leasing_as_cost", "renting_as_cost"):
                     adj["leasing_monthly"] = d(resolved["leasing_monthly"]) * D(cost_f)
                 elif mode in ("cash", "loan"):
                     adj["acquisition_cost"] = d(resolved["acquisition_cost"]) * D(cost_f)
@@ -179,14 +192,14 @@ class AssetPurchasePack:
         horizon = int(inputs["horizon_months"])
         ops: list[BuildOp] = []
 
-        if mode == "leasing_as_cost":
-            lease_id = stable_id("lease", name, variant)
+        if mode in ("leasing_as_cost", "renting_as_cost"):
+            lease_id = stable_id("lease" if mode == "leasing_as_cost" else "rent", name, variant)
             term = int(inputs["leasing_term_months"])
-            end_ym = None
             # end inclusive: start + term - 1 months — mapper uses end_year_month
             from financetwin_engine.mapper.time import add_months
 
             end_ym = add_months(ym, term - 1)
+            label = "Leasing" if mode == "leasing_as_cost" else "Renting"
             ops.append(
                 BuildOp(
                     op="add_entity",
@@ -194,7 +207,7 @@ class AssetPurchasePack:
                     entity_id=lease_id,
                     payload={
                         "id": lease_id,
-                        "name": f"Leasing {name}",
+                        "name": f"{label} {name}",
                         "nature": "fixed",
                         "start_year_month": ym,
                         "end_year_month": end_ym,

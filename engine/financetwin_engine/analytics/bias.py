@@ -122,7 +122,7 @@ def calibrate_value(user_value: Decimal | str | int, median_bias: Decimal | str)
     return D(user_value) * (D(1) - D(median_bias))
 
 
-# Keys de ActualResult → input de pack cuando aplica calibración a inputs.
+# Keys de ActualResult → input de pack cuando aplica calibración / previsto.
 NEW_SITE_KEY_TO_INPUT: dict[str, str] = {
     "sales_monthly": "sales_run_rate",
     "gross_margin_pct": "gross_margin_pct",
@@ -131,13 +131,96 @@ NEW_SITE_KEY_TO_INPUT: dict[str, str] = {
     "headcount": "headcount",
 }
 
+# Calibración automática solo donde hay mapeo estable a inputs (hoy: new_site).
 PACK_KEY_TO_INPUT: dict[str, dict[str, str]] = {
     "new_site": NEW_SITE_KEY_TO_INPUT,
+}
+
+# Previsto congelado al registrar: más packs (no implica calibración).
+FORECAST_KEY_TO_INPUT: dict[str, dict[str, str]] = {
+    "new_site": NEW_SITE_KEY_TO_INPUT,
+    "hiring": {
+        "sales_monthly": "expected_monthly_revenue_uplift",
+        "headcount": "headcount",
+        "gross_margin_pct": "gross_margin_pct",
+    },
+    "asset_purchase": {
+        "capex_total": "acquisition_cost",
+        "sales_monthly": "revenue_uplift_monthly",
+        "gross_margin_pct": "gross_margin_pct",
+    },
+    "financing": {
+        "capex_total": "linked_capex",
+    },
+    "generic_investment": {
+        "sales_monthly": "benefit_amount",
+        "gross_margin_pct": "gross_margin_pct",
+    },
+    "liquidity_plan": {},
 }
 
 
 def key_to_input_for_pack(decision_pack_id: str) -> dict[str, str]:
     return dict(PACK_KEY_TO_INPUT.get(decision_pack_id) or {})
+
+
+def forecast_key_to_input_for_pack(decision_pack_id: str) -> dict[str, str]:
+    return dict(FORECAST_KEY_TO_INPUT.get(decision_pack_id) or {})
+
+
+def forecast_by_key_from_inputs(
+    *,
+    decision_pack_id: str,
+    actual_keys: list[str],
+    pack_inputs: dict | None,
+    run_results: dict | None = None,
+    baseline_sales_monthly: str | None = None,
+) -> dict[str, str]:
+    """Congela valores previstos canónicos a partir de inputs del pack + métricas del run."""
+    inputs = pack_inputs or {}
+    results = run_results or {}
+    mapping = forecast_key_to_input_for_pack(decision_pack_id)
+    out: dict[str, str] = {}
+
+    for key in actual_keys:
+        input_key = mapping.get(key)
+        if input_key is not None and inputs.get(input_key) is not None:
+            out[key] = str(inputs[input_key])
+
+    if "payroll_monthly" in actual_keys and "payroll_monthly" not in out:
+        hc = inputs.get("headcount")
+        cost = inputs.get("employer_cost_per_person")
+        if hc is not None and cost is not None:
+            out["payroll_monthly"] = str(D(hc) * D(cost))
+
+    if "capex_total" in actual_keys and "capex_total" not in out:
+        schedule = inputs.get("capex_schedule")
+        if isinstance(schedule, list) and schedule:
+            total = ZERO
+            for row in schedule:
+                if isinstance(row, dict) and row.get("amount") is not None:
+                    total += D(row["amount"])
+                elif isinstance(row, (list, tuple)) and len(row) >= 2:
+                    total += D(row[1])
+            out["capex_total"] = str(total)
+
+    if "sales_monthly" in actual_keys and "sales_monthly" not in out:
+        if baseline_sales_monthly is not None and str(baseline_sales_monthly) != "":
+            out["sales_monthly"] = str(baseline_sales_monthly)
+
+    fn = results.get("financing_need") or {}
+    if "min_cash" in actual_keys and "min_cash" not in out and fn.get("min_cash") is not None:
+        out["min_cash"] = str(fn["min_cash"])
+
+    im = results.get("investment_metrics") or {}
+    if (
+        "payback_months" in actual_keys
+        and "payback_months" not in out
+        and im.get("payback_months") is not None
+    ):
+        out["payback_months"] = str(im["payback_months"])
+
+    return out
 
 
 def offer_calibration(

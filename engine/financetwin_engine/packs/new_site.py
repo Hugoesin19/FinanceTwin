@@ -99,10 +99,13 @@ class NewSitePack:
             ],
             "stress_tests": [
                 "sales_-15pct",
+                "sales_-20pct",
                 "sales_-30pct",
                 "open_plus_2m",
                 "open_plus_4m",
                 "rate_plus_200bp",
+                "collections_plus_15d",
+                "capex_plus_20pct",
             ],
             "note": "Sweeps executed via financetwin_engine.analytics.sensitivity (re-calls calculate)",
         }

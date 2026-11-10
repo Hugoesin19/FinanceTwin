@@ -52,3 +52,7 @@ api/data/
 
 # Local / private (not for the repo)
 docs/madagascar/
+ejemplo/
+*.xlsx
+!api/templates/**/*.csv
+ejemplo/

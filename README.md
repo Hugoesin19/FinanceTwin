@@ -29,7 +29,21 @@ Finance Twin builds a financial twin of a company so managers can simulate major
 
 ## Status
 
-Producto **uso C** + UX P14/P15: onboarding Crear/Demo, jobs gated, wizards, resultado narrado (P1–P15). Auth/F9/deploy diferidos. V6 validación humana pendiente.
+Producto usable: Resultado con trade-off/runway/DSCR/scorecard, liquidez con presets, import SABI/Excel, tornado + Monte Carlo, Twin Loop en lenguaje claro, demo one-click (`POST /demo/bootstrap`), cuentas gratis con `X-Org-Token`.
+
+## Probar en local / Docker
+
+```bash
+pip install -e engine -e api
+uvicorn financetwin_api.main:app --app-dir api --reload --port 8000
+```
+
+```bash
+docker compose up --build
+# http://localhost:8000  ·  health: GET /health  ·  demo: POST /demo/bootstrap
+```
+
+Deploy HTTPS: `Dockerfile` + `fly.toml` (volumen `/data` para SQLite). Signup: `POST /auth/signup`.
 
 ## Repository
 

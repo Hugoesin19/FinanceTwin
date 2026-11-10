@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finance Twin — Documento de demostración del sistema</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=Source+Sans+3:wght@400;550;650&display=swap");
+    :root {
+      --fg: #1a1f24;
+      --muted: #4a5560;
+      --line: #d0d7de;
+      --accent: #0d4f4b;
+      --soft: #f0f4f5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      color: var(--fg);
+      line-height: 1.55;
+      background: #e8ecef;
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2.25rem 2rem 3.5rem;
+      background: #fff;
+      min-height: 100vh;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+    h1, h2, h3 {
+      font-family: "Source Serif 4", Georgia, serif;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    h1 { font-size: 1.85rem; margin: 0 0 0.35rem; color: var(--accent); }
+    h2 {
+      font-size: 1.28rem;
+      margin: 2rem 0 0.65rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--line);
+    }
+    h3 { font-size: 1.05rem; margin: 1.25rem 0 0.4rem; }
+    p, li { font-size: 0.98rem; }
+    .subtitle { color: var(--muted); margin: 0 0 0.25rem; font-size: 1.05rem; }
+    .meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin: 0 0 1.75rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .toc {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.9rem 1.1rem;
+      margin: 0 0 1.5rem;
+    }
+    .toc ol { margin: 0.35rem 0 0; padding-left: 1.2rem; }
+    .toc a { color: var(--accent); text-decoration: none; font-weight: 550; }
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0.85rem 1rem;
+      margin: 1rem 0;
+      background: var(--soft);
+    }
+    .box strong { color: var(--accent); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin: 0.7rem 0 1.1rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.4rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 650;
+    }
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.86em;
+      background: #eef2f5;
+      padding: 0.08em 0.3em;
+      border-radius: 3px;
+    }
+    ul, ol { padding-left: 1.25rem; }
+    .print-bar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(255,255,255,.94);
+      border-bottom: 1px solid var(--line);
+      padding: 0.55rem 0;
+      margin: -0.5rem 0 1.25rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .print-bar button, .print-bar a {
+      font: inherit;
+      font-weight: 650;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--fg);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .print-bar .primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .footer-note {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    @media print {
+      body { background: #fff; }
+      .wrap { box-shadow: none; max-width: none; padding: 0; }
+      .print-bar { display: none !important; }
+      h2 { break-after: avoid; }
+      .box, table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="print-bar">
+      <button type="button" class="primary" onclick="window.print()">Imprimir / Guardar PDF</button>
+    </div>
+
+    <h1>Finance Twin</h1>
+    <p class="subtitle">Documento de demostración del sistema construido</p>
+    <p class="meta">
+      Documento impersonal de presentación de capacidades · Decision Studio para pymes ·
+      Motor financiero determinista + interfaz web · noviembre 2026
+    </p>
+
+    <nav class="toc" aria-label="Índice">
+      <strong>Contenido</strong>
+      <ol>
+        <li><a href="#problema">Problema que aborda</a></li>
+        <li><a href="#que-es">Qué es el sistema</a></li>
+        <li><a href="#capaz">Qué es capaz de hacer</a></li>
+        <li><a href="#flujo">Flujo operativo demostrable</a></li>
+        <li><a href="#arquitectura">Arquitectura (visión general)</a></li>
+        <li><a href="#motor">Motor y rigor de cálculo</a></li>
+        <li><a href="#packs">Packs de decisión</a></li>
+        <li><a href="#twin-loop">Twin Loop</a></li>
+        <li><a href="#datos">Entrada de datos</a></li>
+        <li><a href="#limites">Alcance y límites explícitos</a></li>
+        <li><a href="#evidencia">Evidencia de implementación</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="problema">1. Problema que aborda</h2>
+    <p>
+      En muchas pymes, las decisiones de inversión o financiación (abrir un local, contratar,
+      pedir un préstamo, adquirir un activo) se evalúan con hojas de cálculo dispersas,
+      intuición o informes contables retrospectivos. Esas herramientas describen el pasado
+      o proyectan un escenario aislado, pero rara vez permiten:
+    </p>
+    <ul>
+      <li>simular el impacto conjunto sobre <strong>valor</strong> (VAN/TIR) y <strong>liquidez</strong> (caja mínima, políticas);</li>
+      <li>comparar variantes (base / conservador / adverso) con el mismo motor;</li>
+      <li>registrar la decisión tomada y, meses después, medir la desviación entre lo previsto y lo real;</li>
+      <li>ajustar hipótesis futuras a partir de ese aprendizaje.</li>
+    </ul>
+    <p>
+      Finance Twin se sitúa <strong>por encima</strong> de la contabilidad o el ERP: no los sustituye.
+      Su función es servir de <em>estudio de decisión</em> antes de comprometer capital.
+    </p>
+    <div class="box">
+      <strong>Formulación del valor:</strong> reducir el riesgo de ejecutar una decisión
+      costosa sin haber explorado, con un modelo reproducible, su efecto en caja y en valor económico.
+    </div>
+
+    <h2 id="que-es">2. Qué es el sistema</h2>
+    <p>
+      Finance Twin es una aplicación web (API + interfaz) que construye un
+      <strong>gemelo financiero (twin)</strong> de la empresa — un snapshot estructurado de caja,
+      ingresos, costes y políticas — y permite lanzar <strong>escenarios de decisión</strong>
+      calculados por un motor determinista.
+    </p>
+    <p>Consta de tres capas de producto:</p>
+    <table>
+      <thead><tr><th>Capa</th><th>Función</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Twin</strong></td>
+          <td>Representación base de la empresa (datos de partida del cálculo).</td>
+        </tr>
+        <tr>
+          <td><strong>Decision Studio</strong></td>
+          <td>Packs de decisión, hipótesis, variantes, resultado e informe.</td>
+        </tr>
+        <tr>
+          <td><strong>Twin Loop</strong></td>
+          <td>Registro de decisión → valores reales → perfil de sesgo → calibración.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Principio de diseño no negociable: <strong>la interfaz no calcula cifras financieras</strong>.
+      Todos los importes relevantes proceden del motor (respuestas API / <code>CalculationRun</code>).
+    </p>
+
+    <h2 id="capaz">3. Qué es capaz de hacer (estado construido)</h2>
+    <p>El sistema implementado permite, de extremo a extremo:</p>
+    <ol>
+      <li><strong>Gestionar empresas</strong> (alta, selección, renombrado, borrado) como puerta de entrada obligatoria.</li>
+      <li><strong>Construir o importar un twin</strong> por varias vías (demo, SABI/PGC, plantilla CSV, entrada manual).</li>
+      <li><strong>Simular seis tipos de decisión</strong> con hipótesis editables y variantes base / conservador / adverso.</li>
+      <li><strong>Analizar liquidez</strong> bajo estrés de ventas u opex, midiendo caja mínima y políticas.</li>
+      <li><strong>Presentar un resultado ejecutivo</strong> (VAN o caja mínima, trade-off, runway, políticas, métricas derivadas).</li>
+      <li><strong>Comparar tres escenarios</strong> y, en el pack de nuevo establecimiento, ejecutar sensibilidad, tornado y Monte Carlo.</li>
+      <li><strong>Descargar un informe HTML</strong> con las métricas del cálculo.</li>
+      <li><strong>Cerrar el ciclo Twin Loop</strong>: congelar el previsto al registrar la decisión, anotar reales por periodo, calcular sesgo y previsualizar/aplicar calibración.</li>
+    </ol>
+
+    <h2 id="flujo">4. Flujo operativo demostrable</h2>
+    <ol>
+      <li><strong>Inicio — empresas.</strong> Sin empresa no se habilitan el resto de secciones.</li>
+      <li><strong>Datos / twin.</strong> Selección de fuente de datos y persistencia del snapshot.</li>
+      <li><strong>Decisión o liquidez.</strong> Elección de pack, hipótesis y cálculo.</li>
+      <li><strong>Resultado.</strong> Lectura de métricas y, opcionalmente, análisis avanzado.</li>
+      <li><strong>Twin Loop.</strong> Registro → reales (≥3 periodos recomendados) → sesgo → calibración → recálculo.</li>
+    </ol>
+    <h2 id="arquitectura">5. Arquitectura (visión general)</h2>
+    <table>
+      <thead><tr><th>Componente</th><th>Tecnología / rol</th></tr></thead>
+      <tbody>
+        <tr><td>Motor</td><td>Biblioteca Python (<code>financetwin_engine</code>): Decimal, caja, PnL, deuda, métricas, packs, analítica.</td></tr>
+        <tr><td>API</td><td>FastAPI (<code>financetwin_api</code>): empresas, snapshot, packs, twin loop, importaciones, informe.</td></tr>
+        <tr><td>Persistencia</td><td>SQLite (adecuado para demo / despliegue mínimo con volumen).</td></tr>
+        <tr><td>Interfaz</td><td>UI estática same-origin (HTML/CSS/JS) servida por la API; sin cálculo financiero en cliente.</td></tr>
+        <tr><td>Empaquetado</td><td>Docker / Compose; configuración de despliegue Fly con volumen para la base de datos.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Separación deliberada: el motor es la fuente de verdad numérica; la API orquesta;
+      la UI captura inputs y presenta outputs.
+    </p>
+
+    <h2 id="motor">6. Motor y rigor de cálculo</h2>
+    <ul>
+      <li>Aritmética monetaria con <strong>Decimal</strong> (evita errores típicos de coma flotante en dinero).</li>
+      <li>Proyección de flujos de caja, financiación, políticas de caja mínima.</li>
+      <li>Métricas de inversión: VAN, TIR, payback simple y descontado, entre otras.</li>
+      <li>Hash / trazabilidad del cálculo para auditoría del run.</li>
+      <li>Batería de pruebas automatizadas (unidad, golden, API, humo de UI).</li>
+    </ul>
+    <p>
+      El resultado mostrado en pantalla es el que devolvió el motor en esa ejecución;
+      no se reinterpreta ni se “redondea a conveniencia” en la capa visual más allá del formateo de presentación.
+    </p>
+
+    <h2 id="packs">7. Packs de decisión implementados</h2>
+    <table>
+      <thead><tr><th>Pack</th><th>Pregunta que responde</th><th>Salida típica</th></tr></thead>
+      <tbody>
+        <tr><td>Nuevo establecimiento</td><td>¿Abrir un local es viable en valor y liquidez?</td><td>VAN, caja mínima, políticas</td></tr>
+        <tr><td>Financiación</td><td>¿Un préstamo cubre el valle de caja o añade presión?</td><td>Caja, políticas</td></tr>
+        <tr><td>Compra de activo</td><td>¿Contado, préstamo, leasing o renting?</td><td>Impacto en caja / valor</td></tr>
+        <tr><td>Contratación</td><td>¿El uplift de ingresos cubre el coste empresa?</td><td>Valor y liquidez</td></tr>
+        <tr><td>Inversión genérica</td><td>CAPEX + beneficio no tipificado en otros packs</td><td>VAN, payback</td></tr>
+        <tr><td>Plan de liquidez</td><td>¿Se aguanta un estrés de ventas/opex?</td><td>Caja mínima, políticas</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Cada pack admite variantes. El pack de nuevo establecimiento concentra además
+      sensibilidad, análisis tornado y simulación Monte Carlo (bajo rangos definidos por el usuario).
+    </p>
+
+    <h2 id="twin-loop">8. Twin Loop: de la simulación al aprendizaje</h2>
+    <p>El bucle implementado es:</p>
+    <ol>
+      <li><strong>Registrar decisión</strong> vinculada a un cálculo; se congela el previsto relevante.</li>
+      <li><strong>Registrar valores reales</strong> por periodo (mes), comparando previsto vs real.</li>
+      <li><strong>Calcular perfil de sesgo</strong>: mediana de <code>(previsto − real) / previsto</code> por indicador.</li>
+      <li><strong>Previsualizar calibración</strong> cuando hay ≥3 periodos y mapeo a inputs del pack.</li>
+      <li><strong>Aplicar calibración</strong>: <code>calibrado = valor × (1 − sesgo_mediano)</code> y recalcular.</li>
+    </ol>
+    <p>
+      Interpretación del sesgo: valor positivo implica sobreestimación sistemática del previsto;
+      valor negativo, subestimación. El conteo de observaciones se realiza por <strong>periodos</strong>.
+    </p>
+
+    <h2 id="datos">9. Entrada de datos</h2>
+    <table>
+      <thead><tr><th>Vía</th><th>Descripción</th></tr></thead>
+      <tbody>
+        <tr><td>Escenario demo</td><td>Empresa de ejemplo + twin + cálculo preejecutado (recorrido guiado).</td></tr>
+        <tr><td>Excel SABI / PGC</td><td>Importación por etiquetas PGC, con previsualización de mapeo y confirmación.</td></tr>
+        <tr><td>Plantilla CSV</td><td>Esquema de columnas fijo de Finance Twin.</td></tr>
+        <tr><td>Entrada manual</td><td>Formulario de caja, ingresos, costes y políticas.</td></tr>
+      </tbody>
+    </table>
+    <div class="box">
+      <strong>Limitación explícita:</strong> un Excel arbitrario (columnas libres sin etiquetas PGC)
+      no se interpreta automáticamente. El sistema exige SABI/PGC reconocible, plantilla CSV o captura manual.
+      La importación SABI es heurística (p. ej. anual → mensual) y debe revisarse en la previsualización.
+    </div>
+
+    <h2 id="limites">10. Alcance y límites explícitos</h2>
+    <h3>Incluido en lo construido</h3>
+    <ul>
+      <li>Decision Studio usable en navegador con flujo guiado.</li>
+      <li>Motor determinista, packs MVP, Twin Loop, informe HTML.</li>
+      <li>Despliegue local y empaquetado Docker.</li>
+    </ul>
+    <h3>Fuera de alcance (o no cerrado como producto SaaS)</h3>
+    <ul>
+      <li>Sustitución de contabilidad / ERP / banca.</li>
+      <li>Conectores automáticos a Holded, Odoo, PSD2, etc.</li>
+      <li>Asistente de IA generativa (previsto como fase futura, no activo en el cálculo).</li>
+      <li>Multi-tenant endurecido de producción (auth completa en UI, aislamiento estricto por defecto en despliegue público).</li>
+      <li>Consejo de inversión o dictamen fiscal vinculante.</li>
+    </ul>
+    <p>
+      El sistema debe presentarse como <strong>prototipo de producto funcional / plataforma de decisión</strong>,
+      no como SaaS comercial multi-cliente ya cerrado.
+    </p>
+
+    <h2 id="evidencia">11. Evidencia de implementación</h2>
+    <p>Lo anterior no es un diseño en papel: corresponde a código y artefactos presentes en el repositorio, entre ellos:</p>
+    <ul>
+      <li>Motor y packs en <code>engine/financetwin_engine/</code>.</li>
+      <li>API, persistencia, importaciones y Twin Loop en <code>api/financetwin_api/</code>.</li>
+      <li>Interfaz Decision Studio en <code>api/financetwin_api/static/</code>.</li>
+      <li>Suite de pruebas automatizadas en <code>engine/tests/</code>, <code>api/tests/</code> y <code>validation/</code>.</li>
+      <li>Documentación técnica de producto, motor, packs y modelo de datos en <code>docs/</code>.</li>
+      <li>Empaquetado <code>Dockerfile</code> / <code>docker-compose.yml</code> y configuración de despliegue.</li>
+    </ul>
+
+    <div class="box">
+      <strong>Conclusión para evaluación:</strong>
+      el proyecto demuestra un sistema operable que une modelo financiero determinista,
+      simulación de decisiones de pyme y bucle de aprendizaje previsto–real.
+      Su madurez es la de un <em>producto demostrable de extremo a extremo</em>,
+      con límites claros respecto a integración empresarial, IA y operación multi-tenant a escala.
+    </div>
+
+    <p class="footer-note">
+      Documento generado para presentación del sistema construido. No sustituye la documentación técnica
+      (<code>MOTOR_FINANCIERO.md</code>, <code>DECISION_PACKS.md</code>, <code>MODELO_DATOS.md</code>, <code>API.md</code>).
+      Uso recomendado: lectura informativa o exportación a PDF mediante impresión del navegador.
+    </p>
+  </div>
+</body>
+</html>

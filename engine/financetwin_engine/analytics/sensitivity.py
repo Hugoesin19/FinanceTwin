@@ -393,9 +393,18 @@ def _apply_stress(
 ) -> tuple[dict[str, Any], str | None]:
     out = deepcopy(resolved)
     if name == "sales_-15pct":
+        if "sales_run_rate" not in out:
+            return out, "sales_run_rate missing"
         out["sales_run_rate"] = str(money(_d(out["sales_run_rate"]) * D("0.85")))
         return out, None
+    if name == "sales_-20pct":
+        if "sales_run_rate" not in out:
+            return out, "sales_run_rate missing"
+        out["sales_run_rate"] = str(money(_d(out["sales_run_rate"]) * D("0.80")))
+        return out, None
     if name == "sales_-30pct":
+        if "sales_run_rate" not in out:
+            return out, "sales_run_rate missing"
         out["sales_run_rate"] = str(money(_d(out["sales_run_rate"]) * D("0.70")))
         return out, None
     if name == "open_plus_2m":
@@ -408,6 +417,19 @@ def _apply_stress(
         if "loan_annual_rate" not in out:
             return out, "loan_annual_rate missing"
         out["loan_annual_rate"] = str(money(_d(out["loan_annual_rate"]) + D("0.02")))
+        return out, None
+    if name == "collections_plus_15d":
+        days = int(out.get("collection_days") or 0)
+        out["collection_days"] = days + 15
+        return out, None
+    if name == "capex_plus_20pct":
+        if "capex_total" not in out:
+            return out, "capex_total missing"
+        new_capex = money(_d(out["capex_total"]) * D("1.20"))
+        out["capex_total"] = str(new_capex)
+        if "equity_amount" in out and "debt_amount" in out:
+            debt = _d(out.get("debt_amount"), ZERO)
+            out["equity_amount"] = str(max(ZERO, new_capex - debt))
         return out, None
     return out, f"unknown stress {name!r}"
 

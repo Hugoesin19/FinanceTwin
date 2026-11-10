@@ -13,15 +13,19 @@ from financetwin_engine.analytics.bias import (
     compute_bias_stats,
     confidence_for_n,
     deviation_pct,
+    forecast_by_key_from_inputs,
     key_to_input_for_pack,
     offer_calibration,
 )
+from financetwin_engine.analytics.montecarlo import run_montecarlo
+from financetwin_engine.analytics.scorecard import build_scorecard
 from financetwin_engine.analytics.sensitivity import (
     direct_sensitivity,
     inverse_sensitivity,
     run_analysis,
     stress_tests,
 )
+from financetwin_engine.analytics.tornado import run_tornado
 
 __all__ = [
     "CANONICAL_VARIABLE_KEYS",
@@ -36,10 +40,14 @@ __all__ = [
     "compute_bias_stats",
     "confidence_for_n",
     "deviation_pct",
+    "forecast_by_key_from_inputs",
     "key_to_input_for_pack",
     "offer_calibration",
     "direct_sensitivity",
     "inverse_sensitivity",
     "run_analysis",
     "stress_tests",
+    "run_montecarlo",
+    "run_tornado",
+    "build_scorecard",
 ]
