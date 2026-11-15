@@ -6,77 +6,74 @@ Objetivo: el profesor **no** clona el repo ni arranca servidores. Solo recibe:
 2. La **guía rápida** (`GUIA_RAPIDA_EVALUADOR.html` → PDF)
 3. (Opcional) el **documento de demostración** (`DOCUMENTO_DEMOSTRACION.html` → PDF)
 
+**Netlify / Vercel no sirven** para esta app: son para front estático o serverless; aquí hace falta un proceso FastAPI + SQLite (Docker).
+
 ---
 
-## Opción recomendada: Fly.io (ya hay `Dockerfile` + `fly.toml`)
+## Opción recomendada (gratis): Render
 
-### 1. Instalar Fly CLI (Windows, PowerShell)
+Ya hay `Dockerfile` + `render.yaml`. El plan Free no pide tarjeta para el web service.
 
-```powershell
-iwr https://fly.io/install.ps1 -useb | iex
-```
+### Limitaciones del free (aceptables para demo)
 
-Cierra y abre la terminal. Comprueba:
+- Tras ~15 min sin visitas el servicio **duerme**; la primera carga puede tardar **~30–60 s**.
+- El disco **no es persistente**: al despertar/redeploy la BD se vacía. El evaluador usa **Cargar escenario demo** y listo.
+- Tope ~750 horas/mes de instancia (suficiente si duerme cuando no se usa).
 
-```powershell
-fly version
-```
+### 1. Cuenta
 
-### 2. Cuenta y login
+1. Entra en [https://render.com](https://render.com) y regístrate con **GitHub**.
+2. Autoriza el acceso al repo `FinanceTwin` (o el que uses).
 
-```powershell
-fly auth login
-```
+### 2. Desplegar con Blueprint
 
-(Se abre el navegador.)
+1. Dashboard → **New** → **Blueprint**.
+2. Elige el repositorio y la rama `main`.
+3. Render lee `render.yaml` y crea el web service `financetwin-demo` (plan Free).
+4. Confirma **Apply**.
 
-### 3. Volumen de datos (SQLite)
+Alternativa manual (sin Blueprint):
 
-Desde la raíz del proyecto (`d:\tfgade`):
+1. **New** → **Web Service** → conecta el repo.
+2. Runtime: **Docker** (detecta el `Dockerfile` de la raíz).
+3. Instance type: **Free**.
+4. Health check path: `/health`.
+5. Env (opcional): `FINANCETWIN_DB=/data/financetwin.sqlite`.
+6. **Create Web Service**.
 
-```powershell
-fly volumes create financetwin_data --size 1 --region cdg --app financetwin-demo
-```
+### 3. URL final
 
-(`mad` está deprecada en Fly; usar `cdg` / París, alineado con `fly.toml`.)
+Cuando el deploy esté en verde:
 
-Si el nombre de app en `fly.toml` (`financetwin-demo`) está cogido, cámbialo ahí y en los comandos.
+`https://financetwin-demo.onrender.com`
 
-### 4. Desplegar
+(Si el nombre está ocupado, Render añade un sufijo; copia la URL del dashboard.)
 
-```powershell
-cd d:\tfgade
-fly deploy
-```
+### 4. Antes de enviarla
 
-### 5. URL final
-
-```powershell
-fly status
-fly apps open
-```
-
-La URL suele ser: `https://financetwin-demo.fly.dev` (o el nombre que hayas puesto).
-
-### 6. Antes de enviarla
-
-1. Ábrela tú y pulsa **Cargar escenario demo**.
-2. En `docs/GUIA_RAPIDA_EVALUADOR.html`, sustituye `[PEGAR AQUÍ LA URL…]` por la URL real.
+1. Ábrela tú (espera el cold start si hace falta) y pulsa **Cargar escenario demo**.
+2. En `docs/GUIA_RAPIDA_EVALUADOR.html` (y la copia en `api/.../static/`), pon la URL real.
 3. Imprime / guarda PDF de la guía rápida (y del documento de demostración si quieres).
 4. Envía por correo: **enlace + 1 o 2 PDF**.
 
 ### Nota de privacidad
 
 La instancia es una demo compartida: quien tenga la URL puede crear empresas.
-No subas datos personales reales del profesor ni de terceros. Para evaluación basta la demo.
+No subas datos personales reales. Para evaluación basta la demo.
+
+---
+
+## Alternativa de pago: Fly.io (`fly.toml`)
+
+Si vuelves a tener crédito o aceptas pagar ~unos euros/mes, `fly deploy` sigue valiendo y el volumen SQLite **sí** persiste. Ver `fly.toml` + `Dockerfile`.
 
 ---
 
 ## Qué enviar al profesor (checklist)
 
-- [ ] URL pública funcionando (demo carga en &lt; 30–60 s; a veces el idle “despierta” lento)
+- [ ] URL pública funcionando (demo carga; a veces el idle “despierta” lento la 1ª vez)
 - [ ] PDF: **Guía rápida de uso**
 - [ ] PDF: **Documento de demostración** (capacidades / qué resuelve)
-- [ ] Una frase en el correo: *“Abrir el enlace → Cargar escenario demo → seguir la guía rápida”*
+- [ ] Una frase en el correo: *“Abrir el enlace → si tarda un minuto en cargar, esperar → Cargar escenario demo → seguir la guía rápida”*
 
 No hace falta GitHub, Python ni Docker en su lado.

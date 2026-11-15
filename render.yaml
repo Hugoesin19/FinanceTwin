@@ -1,0 +1,16 @@
+# Blueprint Render (plan Free). Dashboard: New → Blueprint → este repo.
+# Límites free: duerme tras ~15 min idle; disco efímero (datos se pierden al reiniciar).
+# Para el evaluador: primera visita puede tardar ~1 min; luego "Cargar escenario demo".
+
+services:
+  - type: web
+    name: financetwin-demo
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: FINANCETWIN_DB
+        value: /data/financetwin.sqlite
