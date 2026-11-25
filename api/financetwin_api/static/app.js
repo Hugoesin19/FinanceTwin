@@ -803,13 +803,23 @@
         $("pack_id").value = "new_site";
         localStorage.setItem(LS_PACK, "new_site");
       }
+      // Tras un cálculo/demo: recuperar hipótesis del run y abrir en paso 2.
+      if (state.lastRun && state.lastRun.resolved_inputs) {
+        const pid = state.lastRun.pack_id || $("pack_id").value || "new_site";
+        if (PACK_FORMS[pid]) {
+          $("pack_id").value = pid;
+          localStorage.setItem(LS_PACK, pid);
+          setLastPackInputs(pid, state.lastRun.resolved_inputs);
+        }
+      }
       renderPackCards(false);
       renderPackForm($("pack_id").value);
       if ($("pack_workspace_title")) $("pack_workspace_title").textContent = "Decidir";
       if ($("pack_hint")) {
         $("pack_hint").textContent = "Elige la decisión, revisa hipótesis y calcula.";
       }
-      state.wizStep = 1;
+      state.wizStep =
+        state.lastRun && state.lastRun.pack_id === $("pack_id").value ? 2 : 1;
     }
 
     if (step === "report" && !state.hasReport && !state.lastRun) {
@@ -1832,9 +1842,12 @@
       btn.appendChild(strong);
       btn.appendChild(span);
       btn.addEventListener("click", () => {
+        const prev = $("pack_id").value;
         $("pack_id").value = id;
         localStorage.setItem(LS_PACK, id);
-        clearReport();
+        // Solo limpiar informe si cambias de pack; re-clic en el mismo
+        // (p. ej. tras la demo) no debe tirar resolved_inputs / hipótesis.
+        if (prev && prev !== id) clearReport();
         showError("");
         renderPackForm(id);
         renderPackCards(liquidityOnly);
@@ -1876,9 +1889,23 @@
   }
 
   function hydratePackFormInputs(packId) {
-    if (!state.lastPackInputs || !packId) return;
-    if (state.lastPackInputsPackId && state.lastPackInputsPackId !== packId) return;
-    for (const [key, value] of Object.entries(state.lastPackInputs)) {
+    if (!packId) return;
+    let inputs = null;
+    if (
+      state.lastPackInputs &&
+      (!state.lastPackInputsPackId || state.lastPackInputsPackId === packId)
+    ) {
+      inputs = state.lastPackInputs;
+    } else if (
+      state.lastRun &&
+      state.lastRun.resolved_inputs &&
+      (!state.lastRun.pack_id || state.lastRun.pack_id === packId)
+    ) {
+      inputs = state.lastRun.resolved_inputs;
+      setLastPackInputs(packId, inputs);
+    }
+    if (!inputs) return;
+    for (const [key, value] of Object.entries(inputs)) {
       const el = $(fieldInputId(key));
       if (!el || value == null || value === "") continue;
       el.value =
@@ -2066,6 +2093,10 @@
 
   /** Solo pinta campos presentes en la respuesta del motor. */
   function renderReport(run, compareByVariant) {
+    if (run && run.resolved_inputs) {
+      const pid = run.pack_id || $("pack_id").value || "new_site";
+      setLastPackInputs(pid, run.resolved_inputs);
+    }
     state.lastRun = run;
     state.hasReport = true;
     if (compareByVariant !== undefined) {
@@ -2358,8 +2389,10 @@
       localStorage.setItem(LS_NAME, company.name);
       state.modelVersionId = boot.model_version_id;
       hydrateTwin(boot.snapshot);
-      if (boot.inputs) {
-        setLastPackInputs("new_site", boot.inputs);
+      const demoInputs =
+        (boot.run && boot.run.resolved_inputs) || boot.inputs || null;
+      if (demoInputs) {
+        setLastPackInputs("new_site", demoInputs);
         hydratePackFormInputs("new_site");
       }
       await refreshCompanySelect();
@@ -3543,7 +3576,8 @@
   $("pack_id").addEventListener("change", () => {
     const packId = $("pack_id").value;
     localStorage.setItem(LS_PACK, packId);
-    clearReport();
+    // No borrar el último run si seguimos en el mismo pack (hidratar hipótesis).
+    if (!state.lastRun || state.lastRun.pack_id !== packId) clearReport();
     showError("");
     renderPackForm(packId);
     renderPackCards(packId === "liquidity_plan" || state.liquidityMode);
