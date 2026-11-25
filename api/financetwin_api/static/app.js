@@ -9,6 +9,7 @@
   const LS_PACK = "ft_pack_id";
   const LS_ORG_TOKEN = "ft_org_token";
   const LS_COACH_DONE = "ft_coach_done";
+  const SS_PACK_INPUTS = "ft_last_pack_inputs_v1";
 
   const STEPS = ["home", "twin", "decision", "liquidity", "report", "followup"];
   const STEP_SECTIONS = {
@@ -39,21 +40,23 @@
 
   /** Campos canónicos por pack (DECISION_PACKS / inputs_schema). Defaults = camino feliz. */
   const PACK_FORMS = {
+    // Defaults = mismos números que /demo/bootstrap (DEMO_INPUTS), para que
+    // «Editar hipótesis» tras la demo no muestre otra realidad distinta.
     new_site: {
       title: "Nuevo establecimiento",
       hint: "Simula abrir un local: CAPEX, ventas, alquiler y financiación.",
       fields: [
-        { key: "site_name", label: "Nombre del local", type: "text", value: "Tienda Alicante" },
+        { key: "site_name", label: "Nombre del local", type: "text", value: "Tienda demo" },
         { key: "open_year_month", label: "Apertura (YYYY-MM)", type: "text", value: "2027-01" },
-        { key: "capex_total", label: "Inversión inicial (CAPEX)", type: "money", value: "350000" },
-        { key: "sales_run_rate", label: "Ventas en régimen (€/mes)", type: "money", value: "40000" },
+        { key: "capex_total", label: "Inversión inicial (CAPEX)", type: "money", value: "120000" },
+        { key: "sales_run_rate", label: "Ventas en régimen (€/mes)", type: "money", value: "35000" },
         { key: "gross_margin_pct", label: "Margen bruto (0–1)", type: "rate", value: "0.40" },
-        { key: "rent_monthly", label: "Alquiler mensual", type: "money", value: "4500" },
-        { key: "other_opex_monthly", label: "Otros costes fijos / mes", type: "money", value: "1500" },
+        { key: "rent_monthly", label: "Alquiler mensual", type: "money", value: "3500" },
+        { key: "other_opex_monthly", label: "Otros costes fijos / mes", type: "money", value: "1200" },
         { key: "headcount", label: "Plantilla", type: "count", value: "2" },
-        { key: "employer_cost_per_person", label: "Coste empresa / persona", type: "money", value: "2800" },
-        { key: "debt_amount", label: "Deuda", type: "money", value: "200000" },
-        { key: "equity_amount", label: "Capital propio", type: "money", value: "150000" },
+        { key: "employer_cost_per_person", label: "Coste empresa / persona", type: "money", value: "2500" },
+        { key: "debt_amount", label: "Deuda", type: "money", value: "70000" },
+        { key: "equity_amount", label: "Capital propio", type: "money", value: "50000" },
         { key: "loan_term_months", label: "Plazo préstamo (meses)", type: "count", value: "60" },
         { key: "loan_annual_rate", label: "TIN préstamo (0–1)", type: "rate", value: "0.055" },
         { key: "horizon_months", label: "Horizonte (meses)", type: "count", value: "24" },
@@ -1886,6 +1889,45 @@
   function setLastPackInputs(packId, inputs) {
     state.lastPackInputsPackId = packId || null;
     state.lastPackInputs = inputs ? Object.assign({}, inputs) : null;
+    try {
+      if (packId && inputs) {
+        sessionStorage.setItem(
+          SS_PACK_INPUTS,
+          JSON.stringify({ packId: packId, inputs: state.lastPackInputs })
+        );
+      }
+    } catch (_e) {
+      /* ignore quota / private mode */
+    }
+  }
+
+  function readStoredPackInputs(packId) {
+    try {
+      const raw = sessionStorage.getItem(SS_PACK_INPUTS);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !parsed.inputs) return null;
+      if (packId && parsed.packId && parsed.packId !== packId) return null;
+      return parsed.inputs;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function fillPackFieldValues(inputs) {
+    if (!inputs) return 0;
+    let n = 0;
+    for (const [key, value] of Object.entries(inputs)) {
+      const el = $(fieldInputId(key));
+      if (!el || value == null || value === "") continue;
+      if (typeof value === "object") {
+        // rampa u otros objetos del resolved_inputs: no son campos del formulario
+        continue;
+      }
+      el.value = String(value);
+      n += 1;
+    }
+    return n;
   }
 
   function hydratePackFormInputs(packId) {
@@ -1903,14 +1945,11 @@
     ) {
       inputs = state.lastRun.resolved_inputs;
       setLastPackInputs(packId, inputs);
+    } else {
+      inputs = readStoredPackInputs(packId);
+      if (inputs) setLastPackInputs(packId, inputs);
     }
-    if (!inputs) return;
-    for (const [key, value] of Object.entries(inputs)) {
-      const el = $(fieldInputId(key));
-      if (!el || value == null || value === "") continue;
-      el.value =
-        typeof value === "object" ? JSON.stringify(value) : String(value);
-    }
+    fillPackFieldValues(inputs);
   }
 
   function renderPackForm(packId) {
@@ -3680,6 +3719,31 @@
   }
   if ($("btn-demo-home")) {
     $("btn-demo-home").addEventListener("click", () => loadDemo().catch(showCaught));
+  }
+  if ($("btn-adjust-hyp")) {
+    $("btn-adjust-hyp").addEventListener("click", () => {
+      showError("");
+      const run = state.lastRun;
+      const pid =
+        (run && run.pack_id) ||
+        $("pack_id").value ||
+        "new_site";
+      if (PACK_FORMS[pid]) {
+        $("pack_id").value = pid;
+        localStorage.setItem(LS_PACK, pid);
+      }
+      const inputs =
+        (run && run.resolved_inputs) ||
+        state.lastPackInputs ||
+        readStoredPackInputs(pid) ||
+        null;
+      if (inputs) setLastPackInputs(pid, inputs);
+      state.liquidityMode = false;
+      goToStep("decision");
+      setWizardStep(2);
+      renderPackForm(pid);
+      hydratePackFormInputs(pid);
+    });
   }
   if ($("sabi_file")) {
     $("sabi_file").addEventListener("change", () => {
