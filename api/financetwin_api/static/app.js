@@ -302,6 +302,7 @@
     modelVersionId: null,
     lastRun: null,
     lastPackInputs: null,
+    lastPackInputsPackId: null,
     lastForecastByKey: null,
     lastCompare: null,
     selectedDecisionId: null,
@@ -1869,6 +1870,22 @@
     host.appendChild(label);
   }
 
+  function setLastPackInputs(packId, inputs) {
+    state.lastPackInputsPackId = packId || null;
+    state.lastPackInputs = inputs ? Object.assign({}, inputs) : null;
+  }
+
+  function hydratePackFormInputs(packId) {
+    if (!state.lastPackInputs || !packId) return;
+    if (state.lastPackInputsPackId && state.lastPackInputsPackId !== packId) return;
+    for (const [key, value] of Object.entries(state.lastPackInputs)) {
+      const el = $(fieldInputId(key));
+      if (!el || value == null || value === "") continue;
+      el.value =
+        typeof value === "object" ? JSON.stringify(value) : String(value);
+    }
+  }
+
   function renderPackForm(packId) {
     const def = PACK_FORMS[packId];
     if (!def) throw new Error(`pack desconocido: ${packId}`);
@@ -1890,6 +1907,8 @@
       }
     }
     if (advWrap) advWrap.hidden = !hasAdv;
+    // Tras recrear el formulario, recuperar la última simulación/demo (no los defaults del UI).
+    hydratePackFormInputs(packId);
   }
 
   function collectPackInputs(packId) {
@@ -2340,10 +2359,8 @@
       state.modelVersionId = boot.model_version_id;
       hydrateTwin(boot.snapshot);
       if (boot.inputs) {
-        for (const [key, value] of Object.entries(boot.inputs)) {
-          const el = $(fieldInputId(key));
-          if (el) el.value = String(value);
-        }
+        setLastPackInputs("new_site", boot.inputs);
+        hydratePackFormInputs("new_site");
       }
       await refreshCompanySelect();
       state.fromDemo = true;
@@ -2472,7 +2489,7 @@
     showStatus("loading", "Calculando tu escenario…");
     try {
       const inputs = collectPackInputs(packId);
-      state.lastPackInputs = inputs;
+      setLastPackInputs(packId, inputs);
       const run = await postPackRun(packId, inputs, $("variant").value);
       renderReport(run, null);
       showSuccess(
@@ -2498,7 +2515,7 @@
     if (!PACK_FORMS[packId]) throw new Error(`pack no soportado: ${packId}`);
     validatePackInputs(packId);
     const inputs = collectPackInputs(packId);
-    state.lastPackInputs = inputs;
+    setLastPackInputs(packId, inputs);
     setBusy(true);
     showStatus("loading", "Comparando los 3 escenarios…");
     try {
@@ -3073,10 +3090,9 @@
       const el = $(fieldInputId(key));
       if (el) el.value = String(value);
     }
-    state.lastPackInputs = Object.assign(
-      {},
-      state.lastPackInputs || {},
-      state.lastCalib
+    setLastPackInputs(
+      packId,
+      Object.assign({}, state.lastPackInputs || {}, state.lastCalib)
     );
     if ($("run_meta")) {
       $("run_meta").textContent =
