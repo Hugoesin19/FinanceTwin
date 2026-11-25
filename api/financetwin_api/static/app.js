@@ -807,12 +807,20 @@
         localStorage.setItem(LS_PACK, "new_site");
       }
       // Tras un cálculo/demo: recuperar hipótesis del run y abrir en paso 2.
+      // No pisar si ya hay inputs del mismo pack (p. ej. acabas de aplicar calibración).
       if (state.lastRun && state.lastRun.resolved_inputs) {
         const pid = state.lastRun.pack_id || $("pack_id").value || "new_site";
         if (PACK_FORMS[pid]) {
           $("pack_id").value = pid;
           localStorage.setItem(LS_PACK, pid);
-          setLastPackInputs(pid, state.lastRun.resolved_inputs);
+          if (
+            !(
+              state.lastPackInputs &&
+              state.lastPackInputsPackId === pid
+            )
+          ) {
+            setLastPackInputs(pid, state.lastRun.resolved_inputs);
+          }
         }
       }
       renderPackCards(false);
@@ -3156,22 +3164,23 @@
     state.liquidityMode = false;
     $("pack_id").value = packId;
     localStorage.setItem(LS_PACK, packId);
-    renderPackForm(packId);
-    renderPackCards(false);
-    for (const [key, value] of Object.entries(state.lastCalib)) {
-      const el = $(fieldInputId(key));
-      if (el) el.value = String(value);
-    }
-    setLastPackInputs(
-      packId,
-      Object.assign({}, state.lastPackInputs || {}, state.lastCalib)
+    // Primero guardar calibración en estado (antes de goToStep, que rehidrata el form).
+    const merged = Object.assign(
+      {},
+      state.lastPackInputs ||
+        (state.lastRun && state.lastRun.resolved_inputs) ||
+        {},
+      state.lastCalib
     );
+    setLastPackInputs(packId, merged);
+    goToStep("decision");
+    setWizardStep(2);
+    renderPackForm(packId);
+    fillPackFieldValues(merged);
     if ($("run_meta")) {
       $("run_meta").textContent =
         `Hipótesis calibradas aplicadas (${packTitle(packId)}). Pulsa Calcular.`;
     }
-    goToStep("decision");
-    setWizardStep(2);
     showSuccess(
       "Hipótesis calibradas aplicadas al formulario.",
       null,
@@ -3180,7 +3189,7 @@
     const hint = $("pack_hint");
     if (hint) {
       hint.textContent =
-        "Cifras ya ajustadas por tu sesgo. Revisa y pulsa Calcular para ver el nuevo resultado.";
+        "Cifras ya ajustadas por tu sesgo. Revisa ventas/CAPEX y pulsa Calcular para ver el nuevo VAN.";
     }
   }
 
